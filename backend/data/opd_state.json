@@ -1,0 +1,213 @@
+{
+  "version": 9,
+  "lastUpdated": "2026-10-22T17:46:20.618Z",
+  "tokens": [
+    {
+      "tokenId": "ORT-101",
+      "tokenNumber": 101,
+      "patientName": "Kamla Test",
+      "age": 62,
+      "gender": "Female",
+      "language": "ta",
+      "avoidStairs": true,
+      "assistedMode": true,
+      "departmentId": "Orthopedics",
+      "departmentName": "Orthopedics",
+      "assignedDoctorId": "DOC-VERMA",
+      "assignedDoctorName": "Dr. A. K. Verma",
+      "assignedRoomId": "OPD_208",
+      "assignedFloor": 2,
+      "queueStatus": "WAITING",
+      "journeyStep": "NAVIGATING_TO_WAITING",
+      "issuedAt": "2026-10-22T17:15:42.779Z",
+      "calledAt": null,
+      "inRoomAt": null,
+      "completedAt": null,
+      "supersededNote": {
+        "previousRoom": "OPD_208",
+        "previousFloor": 2,
+        "newRoom": "OPD_208",
+        "newFloor": 2,
+        "reason": "Doctor relocated to specialized clinic",
+        "supersededAt": "2026-10-22T17:46:05.682Z",
+        "confirmedBy": "Staff-Desk"
+      },
+      "version": 3
+    },
+    {
+      "tokenId": "ORT-102",
+      "tokenNumber": 102,
+      "patientName": "Kamla",
+      "age": 62,
+      "gender": "Female",
+      "language": "ta",
+      "avoidStairs": true,
+      "assistedMode": true,
+      "departmentId": "Orthopedics",
+      "departmentName": "Orthopedics",
+      "assignedDoctorId": "DOC-VERMA",
+      "assignedDoctorName": "Dr. A. K. Verma",
+      "assignedRoomId": "OPD_208",
+      "assignedFloor": 2,
+      "queueStatus": "WAITING",
+      "journeyStep": "NAVIGATING_TO_WAITING",
+      "issuedAt": "2026-10-22T17:17:11.591Z",
+      "calledAt": null,
+      "inRoomAt": null,
+      "completedAt": null,
+      "supersededNote": {
+        "previousRoom": "OPD_208",
+        "previousFloor": 2,
+        "newRoom": "OPD_208",
+        "newFloor": 2,
+        "reason": "Doctor relocated to specialized clinic",
+        "supersededAt": "2026-10-22T17:46:05.682Z",
+        "confirmedBy": "Staff-Desk"
+      },
+      "version": 3
+    },
+    {
+      "tokenId": "ORT-103",
+      "tokenNumber": 103,
+      "patientName": "Kamla Test",
+      "age": 62,
+      "gender": "Female",
+      "language": "ta",
+      "avoidStairs": true,
+      "assistedMode": true,
+      "departmentId": "Orthopedics",
+      "departmentName": "Orthopedics",
+      "assignedDoctorId": "DOC-VERMA",
+      "assignedDoctorName": "Dr. A. K. Verma",
+      "assignedRoomId": "OPD_208",
+      "assignedFloor": 2,
+      "queueStatus": "WAITING",
+      "journeyStep": "NAVIGATING_TO_WAITING",
+      "issuedAt": "2026-10-22T17:25:14.680Z",
+      "calledAt": null,
+      "inRoomAt": null,
+      "completedAt": null,
+      "supersededNote": {
+        "previousRoom": "OPD_208",
+        "previousFloor": 2,
+        "newRoom": "OPD_208",
+        "newFloor": 2,
+        "reason": "Doctor relocated to specialized clinic",
+        "supersededAt": "2026-10-22T17:46:05.682Z",
+        "confirmedBy": "Staff-Desk"
+      },
+      "version": 2
+    },
+    {
+      "tokenId": "ORT-104",
+      "tokenNumber": 104,
+      "patientName": "Kamla Test",
+      "age": 62,
+      "gender": "Female",
+      "language": "ta",
+      "avoidStairs": true,
+      "assistedMode": true,
+      "departmentId": "Orthopedics",
+      "departmentName": "Orthopedics",
+      "assignedDoctorId": "DOC-VERMA",
+      "assignedDoctorName": "Dr. A. K. Verma",
+      "assignedRoomId": "OPD_208",
+      "assignedFloor": 2,
+      "queueStatus": "WAITING",
+      "journeyStep": "NAVIGATING_TO_WAITING",
+      "issuedAt": "2026-10-22T17:33:46.551Z",
+      "calledAt": null,
+      "inRoomAt": null,
+      "completedAt": null,
+      "supersededNote": {
+        "previousRoom": "OPD_208",
+        "previousFloor": 2,
+        "newRoom": "OPD_208",
+        "newFloor": 2,
+        "reason": "Doctor relocated to specialized clinic",
+        "supersededAt": "2026-10-22T17:46:05.682Z",
+        "confirmedBy": "Staff-Desk"
+      },
+      "version": 2
+    }
+  ],
+  "tokenCounter": 104,
+  "doctors": [
+    {
+      "id": "DOC-VERMA",
+      "name": "Dr. A. K. Verma",
+      "specialty": "Orthopedics",
+      "roomId": "OPD_208",
+      "floor": 2,
+      "status": "AVAILABLE",
+      "currentToken": null
+    },
+    {
+      "id": "DOC-PRIYA",
+      "name": "Dr. Priya Sundaram",
+      "specialty": "Orthopedics",
+      "roomId": "OPD_105",
+      "floor": 1,
+      "status": "AVAILABLE",
+      "currentToken": null
+    },
+    {
+      "id": "DOC-RAJESH",
+      "name": "Dr. Rajesh Sharma",
+      "specialty": "General Medicine",
+      "roomId": "OPD_208",
+      "floor": 2,
+      "status": "AVAILABLE",
+      "currentToken": null
+    }
+  ],
+  "lifts": {
+    "LIFT_A": {
+      "name": "Elevator Block A",
+      "status": "OPERATIONAL"
+    },
+    "LIFT_B": {
+      "name": "Elevator Block B",
+      "status": "OPERATIONAL"
+    },
+    "RAMP_1": {
+      "name": "Accessible Ramp 1",
+      "status": "OPERATIONAL"
+    },
+    "RAMP_2": {
+      "name": "Accessible Ramp 2",
+      "status": "OPERATIONAL"
+    }
+  },
+  "emergencies": [
+    {
+      "id": "EMG-1792691180617",
+      "location": "Casualty Entrance Gate",
+      "details": "Critical stretcher arrival",
+      "timestamp": "2026-10-22T17:46:20.618Z",
+      "status": "ACTIVE"
+    }
+  ],
+  "auditLog": [
+    {
+      "action": "ROOM_REASSIGNED",
+      "doctorId": "DOC-VERMA",
+      "oldRoomId": "OPD_104",
+      "newRoomId": "OPD_208",
+      "newFloor": 2,
+      "reason": "Equipment maintenance in Room 104",
+      "affectedTokenCount": 2,
+      "timestamp": "2026-10-22T17:18:18.184Z"
+    },
+    {
+      "action": "ROOM_REASSIGNED",
+      "doctorId": "DOC-VERMA",
+      "oldRoomId": "OPD_208",
+      "newRoomId": "OPD_208",
+      "newFloor": 2,
+      "reason": "Doctor relocated to specialized clinic",
+      "affectedTokenCount": 4,
+      "timestamp": "2026-10-22T17:46:05.682Z"
+    }
+  ]
+}

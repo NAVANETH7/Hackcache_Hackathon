@@ -1,0 +1,201 @@
+{
+  "name": "OPD Saathi - Hospital Automation & Patient Broadcast",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "opd-events",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "node-webhook-1",
+      "name": "OPD Saathi Event Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "opd-saathi-webhook-bridge"
+    },
+    {
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ $json.body.eventType }}",
+        "rules": {
+          "rules": [
+            {
+              "value2": "patient.registered",
+              "outputKey": "registered"
+            },
+            {
+              "value2": "doctor.room_reassigned",
+              "outputKey": "reassigned"
+            },
+            {
+              "value2": "emergency.casualty_alert",
+              "outputKey": "emergency"
+            },
+            {
+              "value2": "facility.lift_status_changed",
+              "outputKey": "facility"
+            }
+          ]
+        }
+      },
+      "id": "node-switch-1",
+      "name": "Route by Hospital Event",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
+        "content": "## WhatsApp / SMS Patient Welcome\nSends token number, room location, and step-free directions to patient's family contact."
+      },
+      "id": "node-note-1",
+      "name": "Note - Welcome Message",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [720, 100]
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "notificationType",
+              "value": "WHATSAPP_TOKEN_CONFIRMATION"
+            },
+            {
+              "name": "recipientName",
+              "value": "={{ $json.body.data.token.patientName }}"
+            },
+            {
+              "name": "message_ta",
+              "value": "=வணக்கம் {{ $json.body.data.token.patientName }}. உங்கள் OPD டோக்கன் எண்: {{ $json.body.data.token.tokenId }}. அறை: {{ $json.body.data.token.assignedRoomId }}. மருத்துவர்: {{ $json.body.data.token.assignedDoctorName }}."
+            },
+            {
+              "name": "message_en",
+              "value": "=Welcome {{ $json.body.data.token.patientName }}. Your OPD Token is #{{ $json.body.data.token.tokenNumber }} ({{ $json.body.data.token.tokenId }}). Room: {{ $json.body.data.token.assignedRoomId }} with {{ $json.body.data.token.assignedDoctorName }}."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-set-registered",
+      "name": "Format Welcome Alert",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.2,
+      "position": [760, 180]
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "notificationType",
+              "value": "URGENT_ROOM_SHIFT_BROADCAST"
+            },
+            {
+              "name": "doctor",
+              "value": "={{ $json.body.data.doctor.name }}"
+            },
+            {
+              "name": "previousRoom",
+              "value": "={{ $json.body.data.oldRoomId }}"
+            },
+            {
+              "name": "newRoom",
+              "value": "={{ $json.body.data.newRoomId }} (Floor {{ $json.body.data.newFloor }})"
+            },
+            {
+              "name": "urgentNotice_ta",
+              "value": "=முக்கிய அறிவிப்பு: {{ $json.body.data.doctor.name }} அறை {{ $json.body.data.oldRoomId }}-ல் இருந்து அறை {{ $json.body.data.newRoomId }}-க்கு மாற்றப்பட்டுள்ளார். லிஃப்ட் ஏ வழியாக புதிய வழியைப் பின்பற்றவும்."
+            },
+            {
+              "name": "urgentNotice_en",
+              "value": "=URGENT NOTICE: {{ $json.body.data.doctor.name }} has relocated to Room {{ $json.body.data.newRoomId }} on Floor {{ $json.body.data.newFloor }}. Follow updated route via Lift A."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-set-reassigned",
+      "name": "Format Room Shift Broadcast",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.2,
+      "position": [760, 320]
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "notificationType",
+              "value": "CRITICAL_CASUALTY_PAGER"
+            },
+            {
+              "name": "priority",
+              "value": "RED_URGENT"
+            },
+            {
+              "name": "alertLocation",
+              "value": "={{ $json.body.data.alert.location }}"
+            },
+            {
+              "name": "dispatchAction",
+              "value": "Dispatch nurse and stretcher to entrance immediately."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-set-emergency",
+      "name": "Format Casualty Emergency Alert",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.2,
+      "position": [760, 460]
+    }
+  ],
+  "connections": {
+    "OPD Saathi Event Webhook": {
+      "main": [
+        [
+          {
+            "node": "Route by Hospital Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by Hospital Event": {
+      "main": [
+        [
+          {
+            "node": "Format Welcome Alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Format Room Shift Broadcast",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Format Casualty Emergency Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {}
+}
