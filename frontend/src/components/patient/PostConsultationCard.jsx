@@ -209,9 +209,47 @@ export default function PostConsultationCard({ onNavigateToRoute }) {
             <span className="text-[11px] font-extrabold text-indigo-800">1 Pill • 9 PM</span>
           </div>
         </div>
-        <p className="text-[11px] text-qc-text/70 font-semibold m-0 text-center">
-          💧 {language === 'ta' ? 'எப்போதும் வெதுவெதுப்பான குடிநீருடன் மருந்துகளை உட்கொள்ளவும்.' : 'Always take prescribed tablets with clean drinking water.'}
+      </div>
+
+      {/* 3B. UNIQUE INNOVATION: PMBJP Jan Aushadhi Generic Medicine Stock Radar & Cost Saver */}
+      <div className="bg-gradient-to-br from-[#123C36] to-[#0E2E2A] text-white p-5 rounded-2xl border-2 border-[#F2C66D]/40 space-y-3.5 shadow-md">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#52B788] animate-pulse" />
+            <span className="text-xs font-black uppercase tracking-wider text-[#F2C66D]">
+              PMBJP Jan Aushadhi Generic Medicine Radar
+            </span>
+          </div>
+          <span className="text-[10px] bg-white/10 text-[#D9E8DF] font-bold px-2 py-0.5 rounded-md border border-white/20">
+            Govt. Generic Subsidized
+          </span>
+        </div>
+
+        <p className="text-xs text-[#D9E8DF] m-0 leading-relaxed font-medium">
+          If hospital counter runs out of stock, get prescribed generic salts at the nearest authorized <strong>Jan Aushadhi Kendra</strong> with up to 90% savings:
         </p>
+
+        {/* Medicine Comparison Card */}
+        <div className="bg-white/10 p-3.5 rounded-xl border border-white/15 space-y-2 text-xs">
+          <div className="flex items-center justify-between">
+            <span className="font-bold text-white">Paracetamol 500mg + Calcium D3</span>
+            <span className="text-[10px] bg-emerald-500/20 text-emerald-300 font-bold px-2 py-0.5 rounded">
+              Hospital: In Stock
+            </span>
+          </div>
+
+          <div className="flex items-center justify-between pt-1 border-t border-white/10">
+            <div>
+              <span className="text-[11px] text-[#D9E8DF] block">PMBJP Jan Aushadhi Price:</span>
+              <span className="text-lg font-black text-[#F2C66D] font-mono">₹12.50</span>
+              <span className="text-[11px] text-white/50 line-through ml-2">Private MRP: ₹145</span>
+            </div>
+            <div className="text-right">
+              <span className="text-[10px] font-extrabold text-emerald-300 block">SAVE 91%</span>
+              <span className="text-[10px] text-[#D9E8DF]">Gate 1 Exit • 180m</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* 4. Follow-up and Return Guidance */}
