@@ -36,6 +36,7 @@ export default function PatientHome() {
     setLanguage, 
     hasChosenLanguage, 
     setHasChosenLanguage, 
+    currentHospital,
     t 
   } = useAccessibility();
   const { lastUpdatedText } = useSocket();
