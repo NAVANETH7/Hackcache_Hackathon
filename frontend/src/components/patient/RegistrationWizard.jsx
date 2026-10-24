@@ -4,6 +4,8 @@ import { useJourney } from '../../context/JourneyContext';
 import { useAccessibility } from '../../context/AccessibilityContext';
 import { departments } from '../../data/departments';
 import { speakText, stopSpeaking } from '../../utils/speech';
+import { demographicPersonas } from '../../data/demographicPersonas';
+import AbhaCardModal from './AbhaCardModal';
 import { 
   UserPlus, 
   Sparkles, 
@@ -23,7 +25,11 @@ import {
   Ear,
   Eye,
   Activity,
-  ShieldAlert
+  ShieldAlert,
+  QrCode,
+  CreditCard,
+  BadgeCheck,
+  Users
 } from 'lucide-react';
 
 export default function RegistrationWizard({ onCancel, onFinish }) {
@@ -61,6 +67,8 @@ export default function RegistrationWizard({ onCancel, onFinish }) {
   const [isListening, setIsListening] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showHelpDeskRoute, setShowHelpDeskRoute] = useState(false);
+  const [abhaModalOpen, setAbhaModalOpen] = useState(false);
+  const [activeAbhaPersona, setActiveAbhaPersona] = useState(null);
 
   // Web Speech Recognition for voice input
   const startSpeechRecognition = (fieldName) => {
@@ -97,21 +105,35 @@ export default function RegistrationWizard({ onCancel, onFinish }) {
     }
   };
 
-  // 1-Click Kamla Quick-Fill Preset
-  const handleQuickFillKamla = () => {
+  // 1-Click Pan-India Citizen Persona Selector
+  const handleSelectPersona = (persona) => {
     setFormData({
-      patientName: 'Kamla',
-      age: 62,
-      gender: 'Female',
-      mobile: '9840123456',
-      departmentId: 'ortho',
-      avoidStairs: true,
-      assistedMode: true,
-      language: 'ta'
+      patientName: persona.patientName,
+      age: persona.age,
+      gender: persona.gender,
+      mobile: persona.mobile,
+      abhaId: persona.abhaId,
+      departmentId: persona.departmentId,
+      avoidStairs: persona.avoidStairs,
+      assistedMode: persona.assistedMode,
+      language: persona.language
     });
-    setLanguage('ta');
-    setAssistedMode(true);
+    setLanguage(persona.language);
+    setAssistedMode(persona.assistedMode);
     setCurrentStep(5); // Jump directly to department choice for instant preview
+    speakText(
+      language === 'ta'
+        ? `${persona.patientName} விவரங்கள் ஏற்றப்பட்டது`
+        : `Selected demographic: ${persona.patientName}. Proceeding to ${persona.departmentName}`,
+      persona.language
+    );
+  };
+
+  // 1-Click ABHA (Ayushman Bharat Digital Health Account) Verification Scan
+  const handleSimulateAbhaScan = () => {
+    const persona = demographicPersonas[4]; // Anand Joshi (student with digital ABHA)
+    setActiveAbhaPersona(persona);
+    setAbhaModalOpen(true);
   };
 
   // Read step instructions aloud if readAloud is enabled
@@ -169,42 +191,66 @@ export default function RegistrationWizard({ onCancel, onFinish }) {
   };
 
   return (
-    <div className="max-w-xl mx-auto bg-white rounded-3xl shadow-xl border-2 border-slate-200 overflow-hidden animate-fade-in">
-      {/* Top Bar with Kamla Demo Preset & Helper Switch */}
-      <div className="bg-slate-900 text-white p-4 flex flex-wrap items-center justify-between gap-3 text-xs">
-        <button
-          type="button"
-          onClick={handleQuickFillKamla}
-          className="tap-target-large px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-black flex items-center gap-1.5 shadow active:scale-95 transition-all"
-        >
-          <Sparkles size={15} />
-          <span>{t('registration.kamlaQuickFill')}</span>
-        </button>
+    <div className="max-w-xl mx-auto bg-qc-bg rounded-3xl shadow-xl border-2 border-qc-border overflow-hidden animate-fade-in text-qc-text">
+      {/* Universal Pan-India Citizen Quick Profiles & ABHA Scan */}
+      <div className="bg-qc-primary text-qc-bg p-4 space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+          <div className="flex items-center gap-1.5 font-black uppercase tracking-wider text-qc-amber">
+            <Users size={16} />
+            <span>{language === 'ta' ? 'அனைத்து குடிமக்கள் முன்மாதிரிகள் (Demo)' : 'Pan-India Citizen Presets (Demo)'}</span>
+          </div>
 
-        {/* Someone is helping me toggle */}
-        <label className="flex items-center gap-2 cursor-pointer select-none">
-          <input
-            type="checkbox"
-            checked={assistedMode}
-            onChange={(e) => handleToggleHelperMode(e.target.checked)}
-            className="w-5 h-5 rounded text-emerald-600 focus:ring-emerald-500"
-          />
-          <span className="font-bold text-amber-300">
-            {t('wizard.helperMode')}
-          </span>
-        </label>
+          {/* Someone is helping me toggle */}
+          <label className="flex items-center gap-1.5 cursor-pointer select-none text-xs font-bold text-qc-sage">
+            <input
+              type="checkbox"
+              checked={assistedMode}
+              onChange={(e) => handleToggleHelperMode(e.target.checked)}
+              className="w-4 h-4 rounded text-qc-primary accent-qc-amber"
+            />
+            <span>{t('wizard.helperMode')}</span>
+          </label>
+        </div>
+
+        {/* Horizontal Persona Chips */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+          {demographicPersonas.map((p) => (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => handleSelectPersona(p)}
+              className="tap-target-large flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-xs whitespace-nowrap active:scale-95 transition-all shadow-sm flex-shrink-0"
+              title={`${p.patientName} (${p.state}) - ${p.reason}`}
+            >
+              <span>{p.icon}</span>
+              <span className="font-extrabold">{p.patientName.split(' ')[0]}</span>
+              <span className="text-[10px] text-qc-sage">({p.age}y • {p.stateCode})</span>
+            </button>
+          ))}
+
+          {/* ABHA Instant Card Scan */}
+          <button
+            type="button"
+            onClick={handleSimulateAbhaScan}
+            className="tap-target-large flex items-center gap-1.5 px-3 py-2 rounded-xl bg-qc-amber hover:bg-amber-300 text-qc-text font-black text-xs whitespace-nowrap active:scale-95 transition-all shadow flex-shrink-0"
+            title="Scan National Health Account (ABHA)"
+          >
+            <QrCode size={14} />
+            <span>⚡ ABHA Scan</span>
+          </button>
+        </div>
       </div>
 
       {/* Progress Bar (Steps 1 to 5) */}
       {currentStep > 0 && (
-        <div className="bg-slate-100 border-b border-slate-200 px-6 py-3">
-          <div className="flex items-center justify-between text-xs font-black text-slate-700 uppercase tracking-wider mb-1.5">
+        <div className="bg-qc-sage/30 border-b border-qc-border px-6 py-3">
+          <div className="flex items-center justify-between text-xs font-black text-qc-text uppercase tracking-wider mb-1.5">
             <span>{t('wizard.step')} {currentStep} {t('wizard.of')} 5</span>
-            <span className="text-emerald-700">{Math.round((currentStep / 5) * 100)}%</span>
+            <span className="text-qc-primary font-mono">{Math.round((currentStep / 5) * 100)}%</span>
           </div>
-          <div className="w-full h-2.5 bg-slate-300 rounded-full overflow-hidden">
+          <div className="w-full h-2.5 bg-qc-sage rounded-full overflow-hidden">
             <div 
-              className="h-full bg-emerald-600 rounded-full transition-all duration-300"
+              className="h-full bg-qc-primary rounded-full transition-all duration-300"
               style={{ width: `${(currentStep / 5) * 100}%` }}
             ></div>
           </div>
@@ -567,12 +613,12 @@ export default function RegistrationWizard({ onCancel, onFinish }) {
 
         {/* Wizard Navigation Action Buttons (Back & Next/Finish) */}
         {currentStep > 0 && (
-          <div className="flex items-center justify-between gap-3 pt-4 border-t border-slate-200">
+          <div className="flex items-center justify-between gap-3 pt-4 border-t border-qc-border">
             {/* Back Button */}
             <button
               type="button"
               onClick={() => setCurrentStep(prev => prev - 1)}
-              className="tap-target-large px-5 py-3.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-black text-sm flex items-center gap-1.5 transition-colors"
+              className="tap-target-large px-5 py-3.5 rounded-2xl bg-white border-2 border-qc-border hover:bg-qc-sage/30 text-qc-text font-black text-sm flex items-center gap-1.5 transition-colors focus:ring-2 focus:ring-qc-primary"
             >
               <ArrowLeft size={18} />
               <span>{t('wizard.back')}</span>
@@ -584,11 +630,12 @@ export default function RegistrationWizard({ onCancel, onFinish }) {
                 type="button"
                 onClick={() => {
                   if (currentStep === 1 && !formData.patientName.trim()) {
-                    setFormData(prev => ({ ...prev, patientName: 'Kamla' }));
+                    const fallbackName = language === 'ta' ? 'Kamla Devi' : language === 'hi' ? 'Ramesh Sharma' : 'Citizen Patient';
+                    setFormData(prev => ({ ...prev, patientName: fallbackName }));
                   }
                   setCurrentStep(prev => prev + 1);
                 }}
-                className="tap-target-large flex-1 py-4 px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-base flex items-center justify-center gap-2 shadow-lg transition-transform active:scale-98"
+                className="tap-target-large flex-1 py-4 px-6 rounded-2xl bg-qc-primary hover:bg-qc-primary/90 text-qc-bg font-black text-base flex items-center justify-center gap-2 shadow-lg transition-transform active:scale-98 focus:ring-2 focus:ring-qc-primary"
               >
                 <span>{t('wizard.next')}</span>
                 <ArrowRight size={20} />
@@ -598,7 +645,7 @@ export default function RegistrationWizard({ onCancel, onFinish }) {
                 type="button"
                 disabled={isSubmitting}
                 onClick={handleSubmitRegistration}
-                className="tap-target-large flex-1 py-4 px-6 rounded-2xl bg-emerald-700 hover:bg-emerald-800 text-white font-black text-base flex items-center justify-center gap-2 shadow-lg transition-transform active:scale-98 disabled:opacity-50"
+                className="tap-target-large flex-1 py-4 px-6 rounded-2xl bg-qc-primary hover:bg-qc-primary/95 text-qc-bg font-black text-base flex items-center justify-center gap-2 shadow-lg transition-transform active:scale-98 disabled:opacity-50 focus:ring-2 focus:ring-qc-primary"
               >
                 <span>{isSubmitting ? 'Generating...' : t('wizard.finish')}</span>
                 <Check size={22} />
@@ -607,6 +654,14 @@ export default function RegistrationWizard({ onCancel, onFinish }) {
           </div>
         )}
       </div>
+
+      {/* Interactive ABHA National Health Card Modal */}
+      <AbhaCardModal
+        isOpen={abhaModalOpen}
+        onClose={() => setAbhaModalOpen(false)}
+        persona={activeAbhaPersona}
+        onSelectPersona={handleSelectPersona}
+      />
     </div>
   );
 }

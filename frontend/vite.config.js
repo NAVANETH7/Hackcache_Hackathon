@@ -13,8 +13,8 @@ export default defineConfig({
         name: 'OPD Saathi - Hospital Companion',
         short_name: 'OPD Saathi',
         description: 'Adaptive hospital journey and queue companion for district government hospitals.',
-        theme_color: '#047857',
-        background_color: '#064e3b',
+        theme_color: '#174E46',
+        background_color: '#F7F5EF',
         display: 'standalone',
         orientation: 'portrait-primary',
         icons: [

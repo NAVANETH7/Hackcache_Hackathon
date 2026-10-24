@@ -7,23 +7,55 @@ export default {
   theme: {
     extend: {
       colors: {
+        qc: {
+          bg: '#F7F5EF',
+          card: '#FFFFFF',
+          cardMuted: '#FAF8F3',
+          primary: '#174E46',
+          primaryHover: '#123C36',
+          primaryLight: '#E8F1EC',
+          sage: '#D9E8DF',
+          sageLight: '#EEF4F0',
+          amber: '#F2C66D',
+          amberLight: '#FDF7EA',
+          amberDark: '#8F6413',
+          text: '#26352F',
+          muted: '#52665C',
+          lightText: '#798C82',
+          border: '#E3DED1',
+          borderSubtle: '#EDE8DC',
+          emergency: '#C93B2B',
+          emergencyLight: '#FAECEB',
+          emergencyDark: '#912417',
+        },
         hospital: {
-          50: '#f0fdf4',
-          100: '#dcfce7',
-          500: '#22c55e',
-          600: '#16a34a',
-          700: '#15803d',
-          800: '#166534',
-          900: '#14532d',
+          50: '#F7F5EF',
+          100: '#EEF4F0',
+          500: '#174E46',
+          600: '#123C36',
+          700: '#0E2E2A',
+          800: '#0B2320',
+          900: '#071816',
         },
         alert: {
-          red: '#dc2626',
-          amber: '#d97706',
-          blue: '#2563eb'
+          red: '#C93B2B',
+          amber: '#F2C66D',
+          blue: '#2B5B84'
         }
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
+        sans: [
+          'Inter',
+          'Noto Sans Tamil',
+          'Noto Sans Devanagari',
+          'system-ui',
+          '-apple-system',
+          'BlinkMacSystemFont',
+          'Segoe UI',
+          'Roboto',
+          'sans-serif'
+        ],
+        mono: ['JetBrains Mono', 'Menlo', 'monospace']
       }
     },
   },

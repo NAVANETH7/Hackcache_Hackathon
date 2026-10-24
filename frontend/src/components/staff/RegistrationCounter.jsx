@@ -53,28 +53,28 @@ export default function RegistrationCounter() {
           </h3>
         </div>
         <span className="text-xs font-bold text-slate-500">
-          For walk-in patients without phones (3 Taps)
+          {language === 'ta' ? 'தொலைபேசி இல்லாத நோயாளிகளுக்கு (3 தட்டுகள்)' : language === 'hi' ? 'बिना फोन वाले मरीजों के लिए (3 टैप)' : 'For walk-in patients without phones (3 Taps)'}
         </span>
       </div>
 
       <form onSubmit={handleRegister} className="grid grid-cols-1 sm:grid-cols-4 gap-3">
         <div className="sm:col-span-1">
           <label className="block text-[11px] font-black uppercase text-slate-600 mb-1">
-            Patient Name
+            {language === 'ta' ? 'நோயாளி பெயர்' : language === 'hi' ? 'मरीज का नाम' : 'Patient Name'}
           </label>
           <input
             type="text"
             required
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="e.g. Kamala / Ramesh"
+            placeholder={language === 'ta' ? 'எ.கா. கமலா / ரமேஷ்' : language === 'hi' ? 'उदा. रमेश शर्मा / कमला देवी' : 'e.g. Ramesh / Kamala / Priya'}
             className="w-full text-sm font-bold px-3 py-2 rounded-xl border border-slate-300 focus:border-emerald-600 outline-none"
           />
         </div>
 
         <div>
           <label className="block text-[11px] font-black uppercase text-slate-600 mb-1">
-            Age & Gender
+            {language === 'ta' ? 'வயது & பாலினம்' : language === 'hi' ? 'उम्र और लिंग' : 'Age & Gender'}
           </label>
           <div className="flex gap-2">
             <input
@@ -84,7 +84,7 @@ export default function RegistrationCounter() {
               max={120}
               value={age}
               onChange={(e) => setAge(e.target.value)}
-              placeholder="Age"
+              placeholder={language === 'ta' ? 'வயது' : language === 'hi' ? 'उम्र' : 'Age'}
               className="w-20 text-sm font-bold px-3 py-2 rounded-xl border border-slate-300 focus:border-emerald-600 outline-none"
             />
             <select
@@ -92,16 +92,16 @@ export default function RegistrationCounter() {
               onChange={(e) => setGender(e.target.value)}
               className="flex-1 text-xs font-bold px-2 py-2 rounded-xl border border-slate-300 bg-white"
             >
-              <option value="Female">Female</option>
-              <option value="Male">Male</option>
-              <option value="Other">Other</option>
+              <option value="Female">{language === 'ta' ? 'பெண்' : language === 'hi' ? 'महिला' : 'Female'}</option>
+              <option value="Male">{language === 'ta' ? 'ஆண்' : language === 'hi' ? 'पुरुष' : 'Male'}</option>
+              <option value="Other">{language === 'ta' ? 'மற்றவை' : language === 'hi' ? 'अन्य' : 'Other'}</option>
             </select>
           </div>
         </div>
 
         <div>
           <label className="block text-[11px] font-black uppercase text-slate-600 mb-1">
-            Select Department
+            {language === 'ta' ? 'மருத்துவ துறை' : language === 'hi' ? 'विभाग चुनें' : 'Select Department'}
           </label>
           <select
             value={departmentId}
@@ -110,7 +110,7 @@ export default function RegistrationCounter() {
           >
             {departments.map(d => (
               <option key={d.id} value={d.id}>
-                {d.name} ({d.room})
+                {language === 'ta' ? d.name_ta : language === 'hi' ? d.name_hi : d.name} ({d.room})
               </option>
             ))}
           </select>

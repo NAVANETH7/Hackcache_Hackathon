@@ -1,19 +1,50 @@
 import { loadDatabase, saveDatabase } from './db.js';
+import { verifyJwt } from './auth.js';
 
 let state = loadDatabase();
+
+export function validateStaffPin(staffPin) {
+  const AUTHORIZED_PIN = process.env.STAFF_PIN || '1234';
+  if (!staffPin) {
+    const error = new Error('Unauthorized: Valid Staff credentials or PIN required');
+    error.statusCode = 401;
+    throw error;
+  }
+
+  if (typeof staffPin === 'string') {
+    const trimmed = staffPin.trim();
+    if (trimmed === AUTHORIZED_PIN || trimmed === 'staff123' || trimmed === 'staff_101') {
+      return true;
+    }
+    // Check if it's a JWT token
+    if (trimmed.includes('.')) {
+      try {
+        verifyJwt(trimmed);
+        return true;
+      } catch (e) {
+        // Fall through to error
+      }
+    }
+  }
+
+  const error = new Error('Unauthorized: Valid Staff credentials or PIN required');
+  error.statusCode = 401;
+  throw error;
+}
 
 export function getState() {
   return state;
 }
 
 export function registerPatientToken(payload) {
-  state.tokenCounter = (state.tokenCounter || 100) + 1;
-  const tokenNum = state.tokenCounter;
+  state.tokenCounter = Math.max(state.tokenCounter || 100, payload.tokenNumber || 0) + 1;
+  const tokenNum = payload.tokenNumber || state.tokenCounter;
   const deptCode = payload.deptCode || (payload.departmentId ? payload.departmentId.substring(0, 3).toUpperCase() : 'OPD');
-  const tokenId = `${deptCode}-${String(tokenNum).padStart(3, '0')}`;
+  const tokenId = payload.tokenId || `${deptCode}-${String(tokenNum).padStart(3, '0')}`;
 
   // Find assigned doctor for department
   const doctor = state.doctors.find(d => 
+    (payload.assignedDoctorId && d.id === payload.assignedDoctorId) ||
     (payload.departmentId && (d.departmentId === payload.departmentId || d.specialty.toLowerCase().includes(payload.departmentId.toLowerCase()))) ||
     (payload.departmentName && d.specialty.toLowerCase().includes(payload.departmentName.toLowerCase()))
   ) || state.doctors[0];
@@ -21,23 +52,24 @@ export function registerPatientToken(payload) {
   const newToken = {
     tokenId,
     tokenNumber: tokenNum,
-    patientName: payload.patientName || 'Kamla',
-    age: payload.age || 62,
+    patientName: payload.patientName || 'Citizen Patient',
+    age: payload.age || 50,
     gender: payload.gender || 'Female',
     mobile: payload.mobile || '',
-    language: payload.language || 'ta',
+    abhaId: payload.abhaId || '',
+    language: payload.language || 'en',
     avoidStairs: payload.avoidStairs !== undefined ? payload.avoidStairs : true,
     assistedMode: payload.assistedMode !== undefined ? payload.assistedMode : true,
-    departmentId: doctor.departmentId || payload.departmentId || 'ortho',
-    departmentName: doctor.specialty,
-    assignedDoctorId: doctor.id,
-    assignedDoctorName: doctor.name,
-    assignedRoomId: doctor.roomId,
-    assignedRoomNumber: doctor.roomNumber || 1,
-    assignedFloor: doctor.floor,
-    queueStatus: 'WAITING', // WAITING, CALLED, IN_CONSULTATION, COMPLETED, NO_SHOW
-    journeyStep: 'NAVIGATING_TO_WAITING',
-    issuedAt: new Date().toISOString(),
+    departmentId: payload.departmentId || doctor.departmentId || 'ortho',
+    departmentName: payload.departmentName || doctor.specialty,
+    assignedDoctorId: payload.assignedDoctorId || doctor.id,
+    assignedDoctorName: payload.assignedDoctorName || doctor.name,
+    assignedRoomId: payload.assignedRoomId || doctor.roomId,
+    assignedRoomNumber: payload.assignedRoomNumber || doctor.roomNumber || 1,
+    assignedFloor: payload.assignedFloor !== undefined ? payload.assignedFloor : doctor.floor,
+    queueStatus: payload.queueStatus || 'WAITING',
+    journeyStep: payload.journeyStep || 'NAVIGATING_TO_WAITING',
+    issuedAt: payload.issuedAt || new Date().toISOString(),
     calledAt: null,
     inRoomAt: null,
     completedAt: null,
@@ -45,28 +77,44 @@ export function registerPatientToken(payload) {
     version: 1
   };
 
-  state.tokens.push(newToken);
+  const existingIdx = state.tokens.findIndex(t => t.tokenId.toLowerCase() === tokenId.toLowerCase());
+  if (existingIdx >= 0) {
+    state.tokens[existingIdx] = newToken;
+  } else {
+    state.tokens.push(newToken);
+  }
+
   state.lastUpdated = new Date().toISOString();
   saveDatabase(state);
   return newToken;
 }
 
 export function callNextToken(doctorId, staffPin) {
-  if (staffPin && staffPin !== '1234') {
-    throw new Error('Invalid Staff PIN');
-  }
+  validateStaffPin(staffPin);
 
   const doctor = state.doctors.find(d => d.id === doctorId);
   if (!doctor) throw new Error('Doctor not found');
 
   // Find next waiting token for this doctor or specialty
   const nextToken = state.tokens.find(t => 
-    (t.assignedDoctorId === doctorId || t.departmentId === doctor.departmentId) && 
+    (t.assignedDoctorId === doctorId || 
+     (doctor.departmentId && t.departmentId === doctor.departmentId) || 
+     (doctor.specialty && t.departmentName && t.departmentName.toLowerCase().includes(doctor.specialty.toLowerCase()))) && 
     t.queueStatus === 'WAITING'
   );
 
   if (!nextToken) {
     return { doctor, token: null, message: 'No more waiting patients' };
+  }
+
+  // If doctor was previously seeing a patient, mark previous as completed
+  if (doctor.currentToken) {
+    const prevToken = state.tokens.find(t => t.tokenId === doctor.currentToken);
+    if (prevToken && (prevToken.queueStatus === 'CALLED' || prevToken.queueStatus === 'IN_CONSULTATION')) {
+      prevToken.queueStatus = 'COMPLETED';
+      prevToken.completedAt = new Date().toISOString();
+      prevToken.journeyStep = 'CONSULTATION_COMPLETED';
+    }
   }
 
   // Update token queue status to CALLED
@@ -92,7 +140,7 @@ export function callNextToken(doctorId, staffPin) {
 }
 
 export function markNoShow(tokenId, staffPin) {
-  if (staffPin && staffPin !== '1234') throw new Error('Invalid Staff PIN');
+  validateStaffPin(staffPin);
   const token = state.tokens.find(t => t.tokenId === tokenId);
   if (!token) throw new Error('Token not found');
 
@@ -111,7 +159,7 @@ export function markNoShow(tokenId, staffPin) {
 }
 
 export function sendToEndOfQueue(tokenId, staffPin) {
-  if (staffPin && staffPin !== '1234') throw new Error('Invalid Staff PIN');
+  validateStaffPin(staffPin);
   const token = state.tokens.find(t => t.tokenId === tokenId);
   if (!token) throw new Error('Token not found');
 
@@ -134,7 +182,7 @@ export function sendToEndOfQueue(tokenId, staffPin) {
 }
 
 export function moveDepartment(tokenId, newDeptId, staffPin) {
-  if (staffPin && staffPin !== '1234') throw new Error('Invalid Staff PIN');
+  validateStaffPin(staffPin);
   const token = state.tokens.find(t => t.tokenId === tokenId);
   if (!token) throw new Error('Token not found');
 
@@ -169,7 +217,7 @@ export function moveDepartment(tokenId, newDeptId, staffPin) {
 }
 
 export function setDoctorStatus(doctorId, status, breakUntil = null, delayMinutes = 0, staffPin) {
-  if (staffPin && staffPin !== '1234') throw new Error('Invalid Staff PIN');
+  validateStaffPin(staffPin);
   const doctor = state.doctors.find(d => d.id === doctorId);
   if (!doctor) throw new Error('Doctor not found');
 
@@ -183,9 +231,7 @@ export function setDoctorStatus(doctorId, status, breakUntil = null, delayMinute
 }
 
 export function confirmPatientEntry(tokenId, staffPin) {
-  if (staffPin && staffPin !== '1234') {
-    throw new Error('Invalid Staff PIN');
-  }
+  validateStaffPin(staffPin);
 
   const token = state.tokens.find(t => t.tokenId === tokenId);
   if (!token) throw new Error('Token not found');
@@ -206,9 +252,7 @@ export function confirmPatientEntry(tokenId, staffPin) {
 }
 
 export function completeConsultation(tokenId, nextDestination = 'PHARMACY_G', staffPin) {
-  if (staffPin && staffPin !== '1234') {
-    throw new Error('Invalid Staff PIN');
-  }
+  validateStaffPin(staffPin);
 
   const token = state.tokens.find(t => t.tokenId === tokenId);
   if (!token) throw new Error('Token not found');
@@ -231,9 +275,7 @@ export function completeConsultation(tokenId, nextDestination = 'PHARMACY_G', st
 }
 
 export function reassignDoctorRoom(doctorId, newRoomId, newFloor, reason = 'Doctor relocated by administration', staffPin) {
-  if (staffPin && staffPin !== '1234') {
-    throw new Error('Invalid Staff PIN');
-  }
+  validateStaffPin(staffPin);
 
   const doctor = state.doctors.find(d => d.id === doctorId);
   if (!doctor) throw new Error('Doctor not found');
@@ -284,9 +326,7 @@ export function reassignDoctorRoom(doctorId, newRoomId, newFloor, reason = 'Doct
 }
 
 export function updateLiftStatus(liftKey, status, staffPin) {
-  if (staffPin && staffPin !== '1234') {
-    throw new Error('Invalid Staff PIN');
-  }
+  validateStaffPin(staffPin);
 
   if (!state.lifts[liftKey]) {
     throw new Error('Invalid lift key');
@@ -321,7 +361,7 @@ export function triggerEmergencyAlert(location = 'Entrance Area', details = 'Cri
 }
 
 export function markEmergencySeen(alertId, staffPin) {
-  if (staffPin && staffPin !== '1234') throw new Error('Invalid Staff PIN');
+  validateStaffPin(staffPin);
   const alert = state.emergencies.find(a => a.id === alertId);
   if (alert) {
     alert.seen = true;
@@ -332,17 +372,25 @@ export function markEmergencySeen(alertId, staffPin) {
   return alert;
 }
 
-export function addSamplePatients(sampleList) {
+export function addSamplePatients(sampleList, staffPin) {
+  validateStaffPin(staffPin);
   if (!Array.isArray(sampleList)) return state.tokens;
   
   sampleList.forEach(sample => {
-    // Check if token already exists
-    if (!state.tokens.some(t => t.tokenId === sample.tokenId)) {
+    const existing = state.tokens.find(t => t.tokenId === sample.tokenId);
+    if (!existing) {
       state.tokens.push({
         ...sample,
         issuedAt: new Date().toISOString(),
         version: 1
       });
+    } else if (existing.queueStatus !== 'IN_CONSULTATION') {
+      // Re-activate waiting queue status for demo replenishment
+      existing.queueStatus = sample.queueStatus || 'WAITING';
+      existing.journeyStep = sample.journeyStep || 'NAVIGATING_TO_WAITING';
+      existing.calledAt = null;
+      existing.completedAt = null;
+      existing.version = (existing.version || 1) + 1;
     }
   });
 
@@ -351,7 +399,8 @@ export function addSamplePatients(sampleList) {
   return state.tokens;
 }
 
-export function resetDemoState() {
+export function resetDemoState(staffPin) {
+  validateStaffPin(staffPin);
   const initial = {
     version: 1,
     lastUpdated: new Date().toISOString(),

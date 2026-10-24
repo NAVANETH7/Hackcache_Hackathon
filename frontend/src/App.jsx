@@ -9,6 +9,7 @@ import StaffDashboard from './views/StaffDashboard';
 import WaitingRoomBoard from './views/WaitingRoomBoard';
 import EmergencyView from './views/EmergencyView';
 import DemoHarness from './views/DemoHarness';
+import CaregiverTrackView from './views/CaregiverTrackView';
 import { AlertCircle, RotateCcw } from 'lucide-react';
 
 // Error Boundary Component to guarantee no blank white screen crash
@@ -77,6 +78,7 @@ export default function App() {
                     <Route path="/board" element={<WaitingRoomBoard />} />
                     <Route path="/emergency" element={<EmergencyView />} />
                     <Route path="/demo" element={<DemoHarness />} />
+                    <Route path="/track" element={<CaregiverTrackView />} />
                     {/* Fallback route */}
                     <Route path="*" element={<PatientHome />} />
                   </Routes>

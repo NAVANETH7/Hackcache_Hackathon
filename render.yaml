@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: opd-saathi-backend
+    runtime: node
+    plan: free
+    region: singapore
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: STAFF_PIN
+        value: "1234"
+      - key: JWT_SECRET
+        value: opd_saathi_super_secret_jwt_key_2026

@@ -63,15 +63,29 @@ export function JourneyProvider({ children }) {
     loadSaved();
   }, []);
 
-  // Update route whenever active slip, graph, or lift statuses change
-  useEffect(() => {
-    if (!activeSlip || !hospitalGraph) return;
+  const [customDestinationNodeId, setCustomDestinationNodeId] = useState(null);
 
-    const targetRoomId = activeSlip.assignedRoomId || 'OPD_104';
+  const setCustomDestination = (nodeId) => {
+    setCustomDestinationNodeId(nodeId);
+  };
+
+  const markConsultationCompleted = () => {
+    if (!activeSlip) return;
+    const updated = { ...activeSlip, queueStatus: 'COMPLETED' };
+    setActiveSlip(updated);
+    saveActiveSlipOffline(updated);
+  };
+
+  // Update route whenever active slip, graph, custom destination, or lift statuses change
+  useEffect(() => {
+    if (!hospitalGraph) return;
+    if (!activeSlip && !customDestinationNodeId) return;
+
+    const targetRoomId = customDestinationNodeId || activeSlip?.assignedRoomId || 'OPD_104';
     const lifts = serverState?.lifts || {};
 
     const routeResult = calculateRoute(hospitalGraph, currentStepNodeId, targetRoomId, {
-      avoidStairs: activeSlip.avoidStairs !== false,
+      avoidStairs: activeSlip ? activeSlip.avoidStairs !== false : true,
       liftsState: lifts,
       language
     });
@@ -91,7 +105,7 @@ export function JourneyProvider({ children }) {
       }));
       setHelpModalOpen(true);
     }
-  }, [activeSlip, hospitalGraph, currentStepNodeId, serverState?.lifts, language]);
+  }, [activeSlip, customDestinationNodeId, hospitalGraph, currentStepNodeId, serverState?.lifts, language]);
 
   // Synchronize active slip with authoritative server token updates
   useEffect(() => {
@@ -165,6 +179,7 @@ export function JourneyProvider({ children }) {
     setActiveSlip(slip);
     saveActiveSlipOffline(slip);
     setCurrentStepNodeId('REG_COUNTER');
+    setCustomDestinationNodeId(null);
   };
 
   const advanceToCheckpoint = (nodeId) => {
@@ -181,7 +196,10 @@ export function JourneyProvider({ children }) {
         advanceToCheckpoint,
         nextActionState,
         helpModalOpen,
-        setHelpModalOpen
+        setHelpModalOpen,
+        customDestinationNodeId,
+        setCustomDestination,
+        markConsultationCompleted
       }}
     >
       {children}

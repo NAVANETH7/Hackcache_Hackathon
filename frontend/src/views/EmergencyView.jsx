@@ -61,65 +61,65 @@ export default function EmergencyView() {
         </div>
       </div>
 
-      {/* Emergency Helpline Numbers (112 & 108) */}
-      <div className="bg-slate-900 text-white rounded-3xl p-6 shadow-xl border-2 border-slate-800 space-y-4">
+      {/* Emergency Telephone Numbers (112 & 108) */}
+      <div className="bg-qc-text text-qc-bg rounded-3xl p-6 shadow-xl border-2 border-qc-border space-y-4">
         <h2 className="text-lg font-black text-white m-0 flex items-center gap-2">
-          <Phone size={22} className="text-emerald-400" />
+          <Phone size={22} className="text-qc-amber" />
           <span>Emergency Telephone Numbers (Call Immediately)</span>
         </h2>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <a
             href="tel:112"
-            className="p-4 rounded-2xl bg-slate-800 hover:bg-slate-700 border border-slate-700 flex items-center justify-between text-white no-underline transition-colors"
+            className="p-4 rounded-2xl bg-white/10 hover:bg-white/15 border border-white/20 flex items-center justify-between text-white no-underline transition-colors focus:ring-2 focus:ring-qc-amber"
           >
             <div>
-              <span className="text-xs uppercase font-extrabold text-slate-400 block">All-India Emergency Helpline</span>
-              <span className="text-3xl font-black text-emerald-400 font-mono">112</span>
+              <span className="text-xs uppercase font-extrabold text-qc-sage block">All-India Emergency Helpline</span>
+              <span className="text-3xl font-black text-qc-amber font-mono tabular-nums">112</span>
             </div>
-            <span className="text-xs font-black bg-emerald-600 text-white px-3 py-1.5 rounded-xl">Call 112</span>
+            <span className="text-xs font-black bg-qc-primary text-qc-bg px-3.5 py-1.5 rounded-xl">Call 112</span>
           </a>
 
           <a
             href="tel:108"
-            className="p-4 rounded-2xl bg-slate-800 hover:bg-slate-700 border border-slate-700 flex items-center justify-between text-white no-underline transition-colors"
+            className="p-4 rounded-2xl bg-white/10 hover:bg-white/15 border border-white/20 flex items-center justify-between text-white no-underline transition-colors focus:ring-2 focus:ring-qc-amber"
           >
             <div>
-              <span className="text-xs uppercase font-extrabold text-slate-400 block">National Ambulance Service</span>
-              <span className="text-3xl font-black text-amber-400 font-mono">108</span>
+              <span className="text-xs uppercase font-extrabold text-qc-sage block">National Ambulance Service</span>
+              <span className="text-3xl font-black text-qc-amber font-mono tabular-nums">108</span>
             </div>
-            <span className="text-xs font-black bg-amber-500 text-slate-950 px-3 py-1.5 rounded-xl">Call 108</span>
+            <span className="text-xs font-black bg-qc-amber text-qc-text px-3.5 py-1.5 rounded-xl">Call 108</span>
           </a>
         </div>
       </div>
 
       {/* Direct Way to Emergency (Ground Floor Map Preview) */}
-      <div className="bg-white rounded-3xl shadow-md border-2 border-slate-200 p-6 space-y-4">
-        <h2 className="text-xl font-black text-slate-900 flex items-center gap-2 m-0">
-          <MapPin size={24} className="text-red-600" />
+      <div className="bg-qc-bg rounded-3xl shadow-md border-2 border-qc-border p-6 space-y-4 text-qc-text">
+        <h2 className="text-xl font-black text-qc-text flex items-center gap-2 m-0">
+          <MapPin size={24} className="text-qc-emergency" />
           <span>Way to Emergency (Ground Floor)</span>
         </h2>
 
         <div className="space-y-2.5 text-sm">
-          <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 flex items-start gap-3">
-            <span className="w-8 h-8 rounded-full bg-red-600 text-white font-black flex items-center justify-center flex-shrink-0 text-sm">1</span>
+          <div className="p-3.5 bg-white rounded-2xl border border-qc-border flex items-start gap-3">
+            <span className="w-8 h-8 rounded-full bg-qc-emergency text-white font-black flex items-center justify-center flex-shrink-0 text-sm">1</span>
             <div>
-              <p className="font-extrabold text-slate-900 m-0">
+              <p className="font-extrabold text-qc-text m-0">
                 Follow the RED line on the floor from Main Entrance
               </p>
-              <p className="text-xs text-slate-600 m-0 mt-0.5">
+              <p className="text-xs text-qc-text/70 m-0 mt-0.5">
                 From the hospital entrance gate, follow the painted solid RED stripe straight along the left wall.
               </p>
             </div>
           </div>
 
-          <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 flex items-start gap-3">
-            <span className="w-8 h-8 rounded-full bg-red-600 text-white font-black flex items-center justify-center flex-shrink-0 text-sm">2</span>
+          <div className="p-3.5 bg-white rounded-2xl border border-qc-border flex items-start gap-3">
+            <span className="w-8 h-8 rounded-full bg-qc-emergency text-white font-black flex items-center justify-center flex-shrink-0 text-sm">2</span>
             <div>
-              <p className="font-extrabold text-slate-900 m-0">
+              <p className="font-extrabold text-qc-text m-0">
                 Walk 20 meters straight — Double Automatic Glass Doors
               </p>
-              <p className="text-xs text-slate-600 m-0 mt-0.5">
+              <p className="text-xs text-qc-text/70 m-0 mt-0.5">
                 Casualty has stretchers, wheelchairs and triage nurses on duty 24 hours a day.
               </p>
             </div>
@@ -132,10 +132,10 @@ export default function EmergencyView() {
         </div>
 
         {/* I Need Urgent Help Flag Button */}
-        <div className="pt-3 border-t border-slate-200">
+        <div className="pt-3 border-t border-qc-border">
           {alertSent ? (
-            <div className="p-4 bg-emerald-100 text-emerald-950 rounded-2xl border-2 border-emerald-500 font-black text-sm flex items-center justify-center gap-2 animate-bounce-gentle">
-              <CheckCircle2 size={24} className="text-emerald-700" />
+            <div className="p-4 bg-qc-sage text-qc-primary rounded-2xl border-2 border-qc-primary font-black text-sm flex items-center justify-center gap-2 animate-bounce-gentle">
+              <CheckCircle2 size={24} className="text-qc-primary" />
               <span>URGENT FLAG DISPATCHED! Staff alerted with alarm. An attendant is arriving.</span>
             </div>
           ) : (
@@ -146,14 +146,14 @@ export default function EmergencyView() {
                   value={flagLocation}
                   onChange={(e) => setFlagLocation(e.target.value)}
                   placeholder="Your current spot (e.g. Near Main Entrance / Near Lift A)"
-                  className="flex-1 text-xs font-bold px-3 py-2.5 rounded-xl border border-slate-300"
+                  className="flex-1 text-xs font-bold px-3 py-3 rounded-xl border border-qc-border bg-white text-qc-text focus:ring-2 focus:ring-qc-emergency outline-none"
                 />
               </div>
 
               <button
                 type="button"
                 onClick={handleAlert}
-                className="w-full tap-target-large py-4 rounded-2xl bg-red-600 hover:bg-red-700 text-white font-black text-base flex items-center justify-center gap-2 shadow-xl transition-transform active:scale-95 animate-urgent"
+                className="w-full tap-target-large py-4 rounded-2xl bg-qc-emergency hover:bg-qc-emergency/90 text-white font-black text-base flex items-center justify-center gap-2 shadow-xl transition-transform active:scale-95 animate-urgent focus:ring-2 focus:ring-qc-emergency"
               >
                 <ShieldAlert size={22} />
                 <span>I NEED URGENT HELP (Raise Flag on Staff Dashboard)</span>

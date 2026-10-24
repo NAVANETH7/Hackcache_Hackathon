@@ -49,7 +49,7 @@
     "step": "Step",
     "of": "of",
     "nameTitle": "What is the patient's name?",
-    "namePlaceholder": "Enter first name (e.g. Kamla)",
+    "namePlaceholder": "Enter first name (e.g. Ramesh, Kamla, Priya)",
     "ageTitle": "What is the patient's age in years?",
     "genderTitle": "Select patient's gender",
     "female": "Female",
@@ -87,7 +87,7 @@
     "avoidStairsHint": "Recommended for senior citizens, arthritis patients, and wheelchair users",
     "language": "Preferred Language",
     "submit": "Generate OPD Slip & Begin Journey",
-    "kamlaQuickFill": "Load 'Kamla' Demo Profile (62 yrs, Tamil, No Stairs)"
+    "kamlaQuickFill": "Load Citizen Demo Profiles (All States)"
   },
   "slip": {
     "title": "Government District Hospital — OPD Slip",
@@ -208,7 +208,12 @@
     "pwaTitle": "Install App on Phone",
     "pwaDesc": "Install OPD Saathi to use offline without internet",
     "installBtn": "Install App Now",
-    "installedNotice": "App is installed or ready in browser cache"
+    "installedNotice": "App is installed or ready in browser cache",
+    "offlineStatusTitle": "Connection & Offline Status",
+    "onlineStatus": "Online — Synchronized with hospital server",
+    "offlineStatus": "Offline — Working from local cached data",
+    "cachedDataTitle": "Locally Cached Resources",
+    "cachedDataDesc": "Hospital navigation graph, active OPD slip, translations, and sound alerts are stored on your device."
   },
   "staff": {
     "title": "Staff OPD Coordination Dashboard",
@@ -273,6 +278,57 @@
     "noteLabel": "Mobility Note",
     "noteText": "Strictly cannot climb stairs. Needs elevator, ramp, or wheelchair escort.",
     "guardInstruction": "Please guide this patient to their destination or to the nearest Help Desk.",
-    "close": "Close Card"
+    "close": "Close Card",
+    "requestAssistance": "Send Request to Staff Desk",
+    "requestSending": "Sending...",
+    "requestSentPending": "Request sent to Staff Desk. Waiting for acknowledgement...",
+    "requestAcknowledged": "Staff acknowledged request. An escort is on the way.",
+    "requestOfflineNotice": "Remote assistance cannot be sent right now (offline). Please show this high-contrast card to any staff member or security guard nearby.",
+    "speakCard": "Speak Card Aloud"
+  },
+  "caregiver": {
+    "title": "Family Companion Live Link",
+    "subtitle": "Share patient's real-time journey with family or caregiver",
+    "shareBtn": "Share Live Tracker with Family",
+    "shareText": "Live hospital visit tracker: OPD Room {room}, {ahead} patients ahead in queue.",
+    "copyLink": "Copy Live Link",
+    "copied": "Link Copied!",
+    "callPatient": "Call Patient",
+    "callHelpdesk": "Call Hospital Help Desk",
+    "statusHeading": "Live Patient Visit Status",
+    "remoteWatchNotice": "Family members can view real-time room changes, queue turns, and alerts from home."
+  },
+  "visualAnchor": {
+    "title": "Where are you right now?",
+    "subtitle": "Look around and tap what you see to reset your route instantly",
+    "recalculated": "Path recalibrated from your current landmark!",
+    "helpDesk": "Yellow May I Help You Counter",
+    "waterDispenser": "Water Cooler Dispenser",
+    "liftA": "Lift Block A (Elevator)",
+    "pharmacyWindow": "Central Pharmacy Window",
+    "waitingHall": "Waiting Hall Blue Chairs",
+    "mainGate": "Hospital Main Entrance Gate"
+  },
+  "quietSpots": {
+    "title": "Quiet & Comfortable Seating",
+    "subtitle": "Avoid noisy and crowded waiting corridors",
+    "recommendation": "Waiting room is crowded. You can rest comfortably in Garden Verandah G. We will alert you with chime and vibration when your turn is close.",
+    "viewSpot": "Guide me to Quiet Spot",
+    "gardenVerandah": "Garden Verandah G (Ground Floor, 16% full, shaded with ceiling fans)"
+  },
+  "postConsult": {
+    "title": "Your Next Steps After Consultation",
+    "subtitle": "Follow the sequence below to complete your visit",
+    "pharmacy": "Pick up prescribed free medicines at Pharmacy Counter 3",
+    "lab": "Diagnostic Laboratory for Tests (Ground Floor, G-08)",
+    "completedTitle": "Consultation Finished with Doctor",
+    "routeToPharmacy": "Show Step-Free Route to Pharmacy",
+    "followup": "Doctor recommends follow-up in 2 weeks. Save or print your slip."
+  },
+  "floorLine": {
+    "greenLine": "🟢 Follow the GREEN floor stripe towards OPD & Lifts",
+    "redLine": "🔴 Follow the RED floor stripe towards Casualty / Emergency",
+    "yellowLine": "🟡 Follow the YELLOW floor stripe towards Pharmacy & Lab",
+    "blueLine": "🔵 Follow the BLUE floor stripe towards Maternal & Child Wing"
   }
 }

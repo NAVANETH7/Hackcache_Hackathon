@@ -4,8 +4,8 @@
   "description": "Adaptive multilingual hospital journey and queue companion for government district hospitals.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#064e3b",
-  "theme_color": "#047857",
+  "background_color": "#F7F5EF",
+  "theme_color": "#174E46",
   "orientation": "portrait-primary",
   "icons": [
     {

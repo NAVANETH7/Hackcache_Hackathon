@@ -3,13 +3,99 @@ import en from '../i18n/en.json';
 import hi from '../i18n/hi.json';
 import ta from '../i18n/ta.json';
 import { speakText } from '../utils/speech';
+import { nationalHospitals, defaultHospital, calculateDistanceKm } from '../data/nationalHospitals';
 
 const dictionaries = { en, hi, ta };
 
 const AccessibilityContext = createContext();
 
 export function AccessibilityProvider({ children }) {
-  // 1. Language: English, Hindi, or Tamil (Defaults to Hindi or Tamil for Kamla persona)
+  // 0. Active Pan-India Public Hospital
+  const [currentHospital, setCurrentHospitalState] = useState(() => {
+    const savedId = localStorage.getItem('opd_hospital_id');
+    if (savedId) {
+      const found = nationalHospitals.find(h => h.id === savedId);
+      if (found) return found;
+    }
+    return defaultHospital;
+  });
+
+  const setCurrentHospital = (hosp) => {
+    setCurrentHospitalState(hosp);
+    localStorage.setItem('opd_hospital_id', hosp.id);
+  };
+
+  // Location & Nearest Hospital State
+  const [userLocation, setUserLocation] = useState(() => {
+    try {
+      const saved = localStorage.getItem('opd_user_location');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [locationStatus, setLocationStatus] = useState('idle'); // 'idle' | 'detecting' | 'granted' | 'denied' | 'unsupported'
+  const [locationBannerDismissed, setLocationBannerDismissed] = useState(() => {
+    return Boolean(localStorage.getItem('opd_location_dismissed'));
+  });
+  const [selectedEntranceGate, setSelectedEntranceGate] = useState(() => {
+    return localStorage.getItem('opd_selected_gate') || 'ENTRANCE_G';
+  });
+
+  const updateEntranceGate = (gateId) => {
+    setSelectedEntranceGate(gateId);
+    localStorage.setItem('opd_selected_gate', gateId);
+  };
+
+  const dismissLocationBanner = () => {
+    setLocationBannerDismissed(true);
+    localStorage.setItem('opd_location_dismissed', 'true');
+  };
+
+  const detectLocation = () => {
+    if (!navigator.geolocation) {
+      setLocationStatus('unsupported');
+      return;
+    }
+
+    setLocationStatus('detecting');
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude, accuracy } = pos.coords;
+        const coords = { lat: latitude, lng: longitude, accuracy };
+        setUserLocation(coords);
+        localStorage.setItem('opd_user_location', JSON.stringify(coords));
+
+        // Find nearest hospital using Haversine formula
+        let nearest = nationalHospitals[0];
+        let minDist = Infinity;
+
+        nationalHospitals.forEach((hosp) => {
+          if (hosp.lat && hosp.lng) {
+            const dist = calculateDistanceKm(latitude, longitude, hosp.lat, hosp.lng);
+            if (dist !== null && dist < minDist) {
+              minDist = dist;
+              nearest = hosp;
+            }
+          }
+        });
+
+        setCurrentHospital(nearest);
+        setLocationStatus('granted');
+      },
+      (err) => {
+        console.warn('[OPD Saathi] Geolocation access:', err.message);
+        setLocationStatus('denied');
+      },
+      { timeout: 10000, maximumAge: 60000, enableHighAccuracy: true }
+    );
+  };
+
+  const distanceToCurrentHospital = userLocation && currentHospital?.lat && currentHospital?.lng
+    ? calculateDistanceKm(userLocation.lat, userLocation.lng, currentHospital.lat, currentHospital.lng)
+    : null;
+
+  // 1. Language: English, Hindi, or Tamil (Universal Pan-India Multilingual)
   const [language, setLanguageState] = useState(() => localStorage.getItem('opd_lang') || 'hi');
   const [hasChosenLanguage, setHasChosenLanguage] = useState(() => Boolean(localStorage.getItem('opd_lang_chosen')));
 
@@ -161,6 +247,17 @@ export function AccessibilityProvider({ children }) {
         setAvoidStairsDefault,
         isInstallable,
         triggerInstallApp,
+        currentHospital,
+        setCurrentHospital,
+        nationalHospitals,
+        userLocation,
+        locationStatus,
+        distanceToCurrentHospital,
+        selectedEntranceGate,
+        updateEntranceGate,
+        detectLocation,
+        dismissLocationBanner,
+        locationBannerDismissed,
         t
       }}
     >

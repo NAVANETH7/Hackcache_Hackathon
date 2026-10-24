@@ -102,15 +102,15 @@ export default function FindSlipView({ onFound }) {
   }, []);
 
   return (
-    <div className="max-w-md mx-auto my-6 bg-white rounded-3xl p-6 sm:p-8 shadow-xl border-2 border-slate-200 space-y-6 animate-fade-in">
+    <div className="max-w-md mx-auto my-6 bg-qc-bg rounded-3xl p-6 sm:p-8 shadow-xl border-2 border-qc-border space-y-6 animate-fade-in text-qc-text">
       <div className="text-center">
-        <div className="w-14 h-14 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center mx-auto mb-3 shadow-inner">
+        <div className="w-14 h-14 rounded-2xl bg-qc-sage/60 text-qc-primary flex items-center justify-center mx-auto mb-3 shadow-inner">
           <FileText size={32} />
         </div>
-        <h2 className="text-2xl font-black text-slate-900 m-0">
+        <h2 className="text-2xl font-black text-qc-text m-0">
           {t('haveSlip.title')}
         </h2>
-        <p className="text-xs text-slate-500 font-semibold m-0 mt-1.5">
+        <p className="text-xs text-qc-text/70 font-semibold m-0 mt-1.5">
           {t('haveSlip.desc')}
         </p>
       </div>
@@ -118,7 +118,7 @@ export default function FindSlipView({ onFound }) {
       {/* Manual Token Number Input */}
       <div className="space-y-4">
         <div>
-          <label className="block text-xs font-black uppercase text-slate-700 tracking-wider mb-1.5">
+          <label className="block text-xs font-black uppercase text-qc-text/80 tracking-wider mb-1.5">
             {t('haveSlip.tokenInputLabel')}
           </label>
           <input
@@ -129,12 +129,12 @@ export default function FindSlipView({ onFound }) {
               setErrorMsg('');
             }}
             placeholder={t('haveSlip.tokenPlaceholder')}
-            className="w-full tap-target-large px-4 py-3.5 rounded-2xl border-2 border-slate-300 focus:border-emerald-600 font-mono text-2xl font-black text-slate-900 outline-none text-center tracking-widest uppercase"
+            className="w-full tap-target-large px-4 py-3.5 rounded-2xl border-2 border-qc-border bg-white focus:border-qc-primary font-mono text-2xl font-black text-qc-text outline-none text-center tracking-widest uppercase focus:ring-2 focus:ring-qc-primary"
           />
         </div>
 
         {errorMsg && (
-          <div className="p-3 bg-red-50 text-red-700 rounded-xl border border-red-200 text-xs font-bold flex items-center gap-2">
+          <div className="p-3 bg-red-50 text-qc-emergency rounded-xl border border-red-300 text-xs font-bold flex items-center gap-2">
             <AlertCircle size={16} />
             <span>{errorMsg}</span>
           </div>
@@ -143,7 +143,7 @@ export default function FindSlipView({ onFound }) {
         <button
           type="button"
           onClick={() => handleSearch()}
-          className="w-full tap-target-large py-4 rounded-2xl bg-emerald-700 hover:bg-emerald-800 text-white font-black text-base flex items-center justify-center gap-2 shadow-lg transition-transform active:scale-98"
+          className="w-full tap-target-large py-4 rounded-2xl bg-qc-primary hover:bg-qc-primary/90 text-qc-bg font-black text-base flex items-center justify-center gap-2 shadow-lg transition-transform active:scale-98 focus:ring-2 focus:ring-qc-primary"
         >
           <Search size={20} />
           <span>{t('haveSlip.searchBtn')}</span>
@@ -152,19 +152,19 @@ export default function FindSlipView({ onFound }) {
 
       {/* Camera QR Scanner (Shown only if BarcodeDetector exists in browser) */}
       {hasBarcodeDetector && (
-        <div className="pt-2 border-t border-slate-200">
+        <div className="pt-2 border-t border-qc-border">
           {!cameraActive ? (
             <button
               type="button"
               onClick={startCamera}
-              className="w-full tap-target-large py-3.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-sm flex items-center justify-center gap-2 border border-slate-300 transition-colors"
+              className="w-full tap-target-large py-3.5 rounded-2xl bg-white hover:bg-qc-sage/30 text-qc-text font-bold text-sm flex items-center justify-center gap-2 border border-qc-border transition-colors focus:ring-2 focus:ring-qc-primary"
             >
-              <Camera size={20} className="text-emerald-700" />
+              <Camera size={20} className="text-qc-primary" />
               <span>{t('haveSlip.scanQrBtn')}</span>
             </button>
           ) : (
             <div className="space-y-3 text-center">
-              <div className="relative rounded-2xl overflow-hidden border-2 border-emerald-500 bg-black aspect-square max-w-[280px] mx-auto">
+              <div className="relative rounded-2xl overflow-hidden border-2 border-qc-primary bg-black aspect-square max-w-[280px] mx-auto">
                 <video
                   ref={videoRef}
                   autoPlay
@@ -176,7 +176,7 @@ export default function FindSlipView({ onFound }) {
               <button
                 type="button"
                 onClick={stopCamera}
-                className="tap-target-large px-4 py-2 rounded-xl bg-red-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 mx-auto"
+                className="tap-target-large px-4 py-2 rounded-xl bg-qc-emergency text-white font-bold text-xs flex items-center justify-center gap-1.5 mx-auto"
               >
                 <X size={16} />
                 <span>{t('haveSlip.cancelCamera')}</span>
@@ -187,8 +187,8 @@ export default function FindSlipView({ onFound }) {
       )}
 
       {/* Quick Demo Tokens helper */}
-      <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 text-center">
-        <p className="text-[11px] font-bold text-slate-500 m-0 mb-1.5">
+      <div className="bg-qc-sage/30 p-3.5 rounded-2xl border border-qc-border text-center">
+        <p className="text-[11px] font-bold text-qc-text/70 m-0 mb-1.5">
           Tap a sample token to load instantly:
         </p>
         <div className="flex flex-wrap justify-center gap-2">
@@ -200,7 +200,7 @@ export default function FindSlipView({ onFound }) {
                 setTokenInput(sampleId);
                 handleSearch(sampleId);
               }}
-              className="px-3 py-1 rounded-lg bg-white border border-slate-300 text-xs font-mono font-bold text-slate-800 hover:bg-emerald-50 hover:border-emerald-400"
+              className="px-3 py-1.5 rounded-lg bg-white border border-qc-border text-xs font-mono font-bold text-qc-text hover:bg-qc-sage hover:border-qc-primary/40 transition-colors"
             >
               {sampleId}
             </button>

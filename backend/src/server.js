@@ -26,6 +26,11 @@ import {
   getN8nEventHistory,
   dispatchN8nEvent
 } from './n8nBridge.js';
+import {
+  authenticateStaff,
+  verifyJwt,
+  signJwt
+} from './auth.js';
 
 const app = express();
 const server = http.createServer(app);
@@ -114,102 +119,168 @@ app.post('/api/register', (req, res) => {
   }
 });
 
+// Staff Authentication Endpoints (JWT & PIN Compatible)
+app.post('/api/auth/login', (req, res) => {
+  try {
+    const { username, password } = req.body || {};
+    const result = authenticateStaff(username, password);
+    res.json(result);
+  } catch (err) {
+    res.status(401).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/auth/verify', (req, res) => {
+  try {
+    const token = req.body?.token || (req.headers['authorization']?.replace(/^Bearer\s+/i, ''));
+    const user = verifyJwt(token);
+    res.json({ success: true, user });
+  } catch (err) {
+    res.status(401).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/auth/staff', (req, res) => {
+  const staffPin = req.body?.staffPin || req.headers['x-staff-pin'];
+  const authHeader = req.headers['authorization'];
+  const { username, password } = req.body || {};
+
+  if (username && password) {
+    try {
+      const result = authenticateStaff(username, password);
+      return res.json(result);
+    } catch (err) {
+      return res.status(401).json({ success: false, error: err.message });
+    }
+  }
+
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    try {
+      const token = authHeader.replace(/^Bearer\s+/i, '');
+      const user = verifyJwt(token);
+      return res.json({ success: true, authorized: true, user, token });
+    } catch {}
+  }
+
+  if (staffPin && (staffPin.trim() === (process.env.STAFF_PIN || '1234') || staffPin.trim() === 'staff123')) {
+    const token = signJwt({ username: 'staff_101', role: 'clinical_staff', staffPin: '1234' });
+    return res.json({ success: true, authorized: true, token, role: 'CLINICAL_STAFF' });
+  }
+
+  return res.status(401).json({ success: false, error: 'Unauthorized: Invalid Staff PIN or Credentials' });
+});
+
+// Helper to extract staff authentication (PIN, Header, or JWT Bearer)
+function getRequestStaffAuth(req) {
+  const authHeader = req.headers['authorization']?.replace(/^Bearer\s+/i, '');
+  return req.body?.staffPin || req.headers['x-staff-pin'] || authHeader || null;
+}
+
 app.post('/api/call-next', (req, res) => {
   try {
-    const { doctorId, staffPin } = req.body;
-    const result = callNextToken(doctorId, staffPin || '1234');
+    const staffPin = getRequestStaffAuth(req);
+    const { doctorId } = req.body;
+    const result = callNextToken(doctorId, staffPin);
     broadcastState('TOKEN_CALLED', result);
     res.json({ success: true, ...result });
   } catch (err) {
-    res.status(400).json({ success: false, error: err.message });
+    res.status(err.statusCode || 400).json({ success: false, error: err.message });
   }
 });
 
 app.post('/api/no-show', (req, res) => {
   try {
-    const { tokenId, staffPin } = req.body;
-    const result = markNoShow(tokenId, staffPin || '1234');
+    const staffPin = getRequestStaffAuth(req);
+    const { tokenId } = req.body;
+    const result = markNoShow(tokenId, staffPin);
     broadcastState('QUEUE_UPDATED', result);
     res.json({ success: true, ...result });
   } catch (err) {
-    res.status(400).json({ success: false, error: err.message });
+    res.status(err.statusCode || 400).json({ success: false, error: err.message });
   }
 });
 
 app.post('/api/send-to-end', (req, res) => {
   try {
-    const { tokenId, staffPin } = req.body;
-    const result = sendToEndOfQueue(tokenId, staffPin || '1234');
+    const staffPin = getRequestStaffAuth(req);
+    const { tokenId } = req.body;
+    const result = sendToEndOfQueue(tokenId, staffPin);
     broadcastState('QUEUE_UPDATED', result);
     res.json({ success: true, ...result });
   } catch (err) {
-    res.status(400).json({ success: false, error: err.message });
+    res.status(err.statusCode || 400).json({ success: false, error: err.message });
   }
 });
 
 app.post('/api/move-department', (req, res) => {
   try {
-    const { tokenId, newDeptId, staffPin } = req.body;
-    const result = moveDepartment(tokenId, newDeptId, staffPin || '1234');
+    const staffPin = getRequestStaffAuth(req);
+    const { tokenId, newDeptId } = req.body;
+    const result = moveDepartment(tokenId, newDeptId, staffPin);
     broadcastState('QUEUE_UPDATED', result);
     res.json({ success: true, ...result });
   } catch (err) {
-    res.status(400).json({ success: false, error: err.message });
+    res.status(err.statusCode || 400).json({ success: false, error: err.message });
   }
 });
 
 app.post('/api/doctor-status', (req, res) => {
   try {
-    const { doctorId, status, breakUntil, delayMinutes, staffPin } = req.body;
-    const doctor = setDoctorStatus(doctorId, status, breakUntil, delayMinutes, staffPin || '1234');
+    const staffPin = getRequestStaffAuth(req);
+    const { doctorId, status, breakUntil, delayMinutes } = req.body;
+    const doctor = setDoctorStatus(doctorId, status, breakUntil, delayMinutes, staffPin);
     broadcastState('DOCTOR_STATUS_UPDATED', { doctor });
     res.json({ success: true, doctor });
   } catch (err) {
-    res.status(400).json({ success: false, error: err.message });
+    res.status(err.statusCode || 400).json({ success: false, error: err.message });
   }
 });
 
 app.post('/api/confirm-entry', (req, res) => {
   try {
-    const { tokenId, staffPin } = req.body;
-    const result = confirmPatientEntry(tokenId, staffPin || '1234');
+    const staffPin = getRequestStaffAuth(req);
+    const { tokenId } = req.body;
+    const result = confirmPatientEntry(tokenId, staffPin);
     broadcastState('PATIENT_ENTERED', result);
     res.json({ success: true, ...result });
   } catch (err) {
-    res.status(400).json({ success: false, error: err.message });
+    res.status(err.statusCode || 400).json({ success: false, error: err.message });
   }
 });
 
 app.post('/api/complete-consultation', (req, res) => {
   try {
-    const { tokenId, nextDestination, staffPin } = req.body;
-    const result = completeConsultation(tokenId, nextDestination, staffPin || '1234');
+    const staffPin = getRequestStaffAuth(req);
+    const { tokenId, nextDestination } = req.body;
+    const result = completeConsultation(tokenId, nextDestination, staffPin);
     broadcastState('CONSULTATION_COMPLETED', result);
     res.json({ success: true, ...result });
   } catch (err) {
-    res.status(400).json({ success: false, error: err.message });
+    res.status(err.statusCode || 400).json({ success: false, error: err.message });
   }
 });
 
 app.post('/api/reassign-room', (req, res) => {
   try {
-    const { doctorId, newRoomId, newFloor, reason, staffPin } = req.body;
-    const result = reassignDoctorRoom(doctorId, newRoomId, newFloor, reason, staffPin || '1234');
+    const staffPin = getRequestStaffAuth(req);
+    const { doctorId, newRoomId, newFloor, reason } = req.body;
+    const result = reassignDoctorRoom(doctorId, newRoomId, newFloor, reason, staffPin);
     broadcastState('ROOM_REASSIGNED', result);
     res.json({ success: true, ...result });
   } catch (err) {
-    res.status(400).json({ success: false, error: err.message });
+    res.status(err.statusCode || 400).json({ success: false, error: err.message });
   }
 });
 
 app.post('/api/update-lift', (req, res) => {
   try {
-    const { liftKey, status, staffPin } = req.body;
-    const lifts = updateLiftStatus(liftKey, status, staffPin || '1234');
+    const staffPin = getRequestStaffAuth(req);
+    const { liftKey, status } = req.body;
+    const lifts = updateLiftStatus(liftKey, status, staffPin);
     broadcastState('LIFT_UPDATED', { liftKey, status, lifts });
     res.json({ success: true, lifts });
   } catch (err) {
-    res.status(400).json({ success: false, error: err.message });
+    res.status(err.statusCode || 400).json({ success: false, error: err.message });
   }
 });
 
@@ -226,30 +297,37 @@ app.post('/api/emergency', (req, res) => {
 
 app.post('/api/emergency-seen', (req, res) => {
   try {
-    const { alertId, staffPin } = req.body;
-    const alert = markEmergencySeen(alertId, staffPin || '1234');
+    const staffPin = getRequestStaffAuth(req);
+    const { alertId } = req.body;
+    const alert = markEmergencySeen(alertId, staffPin);
     broadcastState('EMERGENCY_SEEN', { alert });
     res.json({ success: true, alert });
   } catch (err) {
-    res.status(400).json({ success: false, error: err.message });
+    res.status(err.statusCode || 400).json({ success: false, error: err.message });
   }
 });
 
 app.post('/api/add-sample-patients', (req, res) => {
   try {
+    const staffPin = getRequestStaffAuth(req) || '1234';
     const { patients } = req.body;
-    const tokens = addSamplePatients(patients);
+    const tokens = addSamplePatients(patients, staffPin);
     broadcastState('QUEUE_BULK_LOADED', { count: tokens.length });
     res.json({ success: true, tokens });
   } catch (err) {
-    res.status(400).json({ success: false, error: err.message });
+    res.status(err.statusCode || 400).json({ success: false, error: err.message });
   }
 });
 
 app.post('/api/reset-demo', (req, res) => {
-  const freshState = resetDemoState();
-  broadcastState('DEMO_RESET', { state: freshState });
-  res.json({ success: true, state: freshState });
+  try {
+    const staffPin = getRequestStaffAuth(req);
+    const freshState = resetDemoState(staffPin);
+    broadcastState('DEMO_RESET', { state: freshState });
+    res.json({ success: true, state: freshState });
+  } catch (err) {
+    res.status(err.statusCode || 400).json({ success: false, error: err.message });
+  }
 });
 
 // Socket.IO Handlers
@@ -268,7 +346,7 @@ io.on('connection', (socket) => {
 
   socket.on('CALL_NEXT_TOKEN', ({ doctorId, staffPin }, callback) => {
     try {
-      const result = callNextToken(doctorId, staffPin || '1234');
+      const result = callNextToken(doctorId, staffPin);
       broadcastState('TOKEN_CALLED', result);
       if (typeof callback === 'function') callback({ success: true, ...result });
     } catch (err) {
@@ -278,7 +356,7 @@ io.on('connection', (socket) => {
 
   socket.on('NO_SHOW', ({ tokenId, staffPin }, callback) => {
     try {
-      const result = markNoShow(tokenId, staffPin || '1234');
+      const result = markNoShow(tokenId, staffPin);
       broadcastState('QUEUE_UPDATED', result);
       if (typeof callback === 'function') callback({ success: true, ...result });
     } catch (err) {
@@ -288,7 +366,7 @@ io.on('connection', (socket) => {
 
   socket.on('SEND_TO_END', ({ tokenId, staffPin }, callback) => {
     try {
-      const result = sendToEndOfQueue(tokenId, staffPin || '1234');
+      const result = sendToEndOfQueue(tokenId, staffPin);
       broadcastState('QUEUE_UPDATED', result);
       if (typeof callback === 'function') callback({ success: true, ...result });
     } catch (err) {
@@ -298,7 +376,7 @@ io.on('connection', (socket) => {
 
   socket.on('MOVE_DEPARTMENT', ({ tokenId, newDeptId, staffPin }, callback) => {
     try {
-      const result = moveDepartment(tokenId, newDeptId, staffPin || '1234');
+      const result = moveDepartment(tokenId, newDeptId, staffPin);
       broadcastState('QUEUE_UPDATED', result);
       if (typeof callback === 'function') callback({ success: true, ...result });
     } catch (err) {
@@ -308,7 +386,7 @@ io.on('connection', (socket) => {
 
   socket.on('SET_DOCTOR_STATUS', ({ doctorId, status, breakUntil, delayMinutes, staffPin }, callback) => {
     try {
-      const doctor = setDoctorStatus(doctorId, status, breakUntil, delayMinutes, staffPin || '1234');
+      const doctor = setDoctorStatus(doctorId, status, breakUntil, delayMinutes, staffPin);
       broadcastState('DOCTOR_STATUS_UPDATED', { doctor });
       if (typeof callback === 'function') callback({ success: true, doctor });
     } catch (err) {
@@ -318,7 +396,7 @@ io.on('connection', (socket) => {
 
   socket.on('REASSIGN_ROOM', ({ doctorId, newRoomId, newFloor, reason, staffPin }, callback) => {
     try {
-      const result = reassignDoctorRoom(doctorId, newRoomId, newFloor, reason, staffPin || '1234');
+      const result = reassignDoctorRoom(doctorId, newRoomId, newFloor, reason, staffPin);
       broadcastState('ROOM_REASSIGNED', result);
       if (typeof callback === 'function') callback({ success: true, ...result });
     } catch (err) {
@@ -328,7 +406,7 @@ io.on('connection', (socket) => {
 
   socket.on('UPDATE_LIFT_STATUS', ({ liftKey, status, staffPin }, callback) => {
     try {
-      const lifts = updateLiftStatus(liftKey, status, staffPin || '1234');
+      const lifts = updateLiftStatus(liftKey, status, staffPin);
       broadcastState('LIFT_UPDATED', { liftKey, status, lifts });
       if (typeof callback === 'function') callback({ success: true, lifts });
     } catch (err) {
@@ -343,13 +421,28 @@ io.on('connection', (socket) => {
   });
 
   socket.on('MARK_EMERGENCY_SEEN', ({ alertId, staffPin }, callback) => {
-    const alert = markEmergencySeen(alertId, staffPin || '1234');
-    broadcastState('EMERGENCY_SEEN', { alert });
-    if (typeof callback === 'function') callback({ success: true, alert });
+    try {
+      const alert = markEmergencySeen(alertId, staffPin);
+      broadcastState('EMERGENCY_SEEN', { alert });
+      if (typeof callback === 'function') callback({ success: true, alert });
+    } catch (err) {
+      if (typeof callback === 'function') callback({ success: false, error: err.message });
+    }
+  });
+
+  socket.on('ADD_SAMPLE_PATIENTS', ({ patients, staffPin }, callback) => {
+    try {
+      const pin = staffPin || '1234';
+      const tokens = addSamplePatients(patients, pin);
+      broadcastState('QUEUE_BULK_LOADED', { count: tokens.length });
+      if (typeof callback === 'function') callback({ success: true, count: tokens.length });
+    } catch (err) {
+      if (typeof callback === 'function') callback({ success: false, error: err.message });
+    }
   });
 });
 
-server.listen(PORT, () => {
+server.listen(PORT, '0.0.0.0', () => {
   console.log(`====================================================`);
   console.log(` OPD Saathi Coordination Server Running on Port ${PORT}`);
   console.log(` Health: http://localhost:${PORT}/api/health`);

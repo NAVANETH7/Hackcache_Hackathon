@@ -3,44 +3,100 @@
 @tailwind utilities;
 
 :root {
-  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  font-family: 'Inter', 'Noto Sans Tamil', 'Noto Sans Devanagari', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   line-height: 1.5;
   font-weight: 400;
   color-scheme: light;
-  color: #1e293b;
-  background-color: #f8fafc;
+  color: #26352F;
+  background-color: #F7F5EF;
 }
 
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  background-color: #F7F5EF;
+  color: #26352F;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Accessible High Contrast & Tap Target Utilities */
+/* Tabular numerals for time and queue tokens */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Accessible Minimum Touch Targets (WCAG 2.2 AA / AAA: >= 48px, >= 56px for primary buttons) */
 .tap-target-large {
   min-height: 48px;
   min-width: 48px;
 }
 
-/* Pulsing beacon for live active guidance */
-@keyframes beaconPulse {
-  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
-  70% { transform: scale(1.05); box-shadow: 0 0 0 12px rgba(34, 197, 94, 0); }
-  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+.tap-button-primary {
+  min-height: 56px;
 }
 
-.animate-beacon {
-  animation: beaconPulse 2s infinite ease-in-out;
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
-@keyframes urgentPulse {
-  0% { transform: scale(0.98); box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); }
-  50% { transform: scale(1.02); box-shadow: 0 0 0 10px rgba(220, 38, 38, 0); }
-  100% { transform: scale(0.98); box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+/* High Contrast Mode for Low Vision Patients */
+.high-contrast {
+  --tw-bg-opacity: 1;
+  background-color: #000000 !important;
+  color: #FFFFFF !important;
 }
 
-.animate-urgent {
-  animation: urgentPulse 1.5s infinite ease-in-out;
+.high-contrast .bg-white,
+.high-contrast .bg-qc-card,
+.high-contrast .bg-qc-bg {
+  background-color: #121212 !important;
+  color: #FFFFFF !important;
+  border-color: #FFFFFF !important;
+}
+
+.high-contrast .text-qc-text,
+.high-contrast .text-slate-900,
+.high-contrast .text-slate-800 {
+  color: #FFFFFF !important;
+}
+
+.high-contrast .text-qc-muted,
+.high-contrast .text-slate-600,
+.high-contrast .text-slate-500 {
+  color: #F2C66D !important;
+}
+
+.high-contrast button {
+  border: 2px solid #FFFFFF !important;
+}
+
+/* Calm, restrained beacon for active directions */
+@keyframes calmBeacon {
+  0% { transform: scale(0.96); box-shadow: 0 0 0 0 rgba(23, 78, 70, 0.4); }
+  60% { transform: scale(1.02); box-shadow: 0 0 0 8px rgba(23, 78, 70, 0); }
+  100% { transform: scale(0.96); box-shadow: 0 0 0 0 rgba(23, 78, 70, 0); }
+}
+
+.animate-calm-beacon {
+  animation: calmBeacon 2.5s infinite ease-in-out;
+}
+
+/* Gentle alert pulse for superseding notices */
+@keyframes amberGlow {
+  0% { border-color: rgba(242, 198, 109, 0.5); }
+  50% { border-color: rgba(242, 198, 109, 1); }
+  100% { border-color: rgba(242, 198, 109, 0.5); }
+}
+
+.animate-amber-glow {
+  animation: amberGlow 2s infinite ease-in-out;
 }

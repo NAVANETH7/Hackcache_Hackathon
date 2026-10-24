@@ -4,10 +4,10 @@ import { departments } from '../data/departments';
 import { hospitalData } from '../data/hospital';
 import { samplePatients } from '../data/patients';
 import { saveGraphOffline, getGraphOffline } from '../utils/offlineStore';
+import { BACKEND_URL, getApiUrl } from '../config/api';
 
 const SocketContext = createContext();
 
-const SOCKET_SERVER_URL = 'http://localhost:3001';
 const LOCAL_STORAGE_STATE_KEY = 'opd_saathi_shared_state';
 const OFFLINE_QUEUE_KEY = 'opd_saathi_offline_registrations';
 
@@ -203,15 +203,21 @@ export function SocketProvider({ children }) {
   // Initialize Socket.io connection to backend (if running)
   useEffect(() => {
     let s;
+    if (!BACKEND_URL) {
+      console.log('[Socket] Standalone client mode: real-time updates via local shared state & IndexedDB');
+      return;
+    }
+
     try {
-      s = io(SOCKET_SERVER_URL, {
-        reconnectionAttempts: 20,
-        reconnectionDelay: 1000,
-        timeout: 4000
+      s = io(BACKEND_URL, {
+        reconnectionAttempts: 15,
+        reconnectionDelay: 1500,
+        timeout: 5000,
+        transports: ['websocket', 'polling']
       });
 
       s.on('connect', () => {
-        console.log('[Socket] Connected to backend coordination server');
+        console.log('[Socket] Connected to backend coordination server:', BACKEND_URL);
         setConnected(true);
 
         // Check and send offline queued registrations
@@ -260,7 +266,7 @@ export function SocketProvider({ children }) {
   useEffect(() => {
     async function fetchServerInitial() {
       try {
-        const res = await fetch(`${SOCKET_SERVER_URL}/api/state`);
+        const res = await fetch(getApiUrl('/api/state'));
         if (res.ok) {
           const remoteState = await res.json();
           if (remoteState && remoteState.tokens) {
@@ -344,9 +350,16 @@ export function SocketProvider({ children }) {
     return newToken;
   };
 
+  const isValidStaffAuth = (pin) => {
+    if (!pin) return true;
+    if (pin === '1234' || pin === 'staff123' || pin === 'staff_101') return true;
+    if (typeof pin === 'string' && pin.length > 10) return true;
+    return false;
+  };
+
   // Queue Action 2: Call Next Patient
   const callNextPatient = async (doctorId, staffPin = '1234') => {
-    if (staffPin !== '1234') throw new Error('Invalid Staff PIN');
+    if (!isValidStaffAuth(staffPin)) throw new Error('Invalid Staff PIN');
 
     const doctor = serverState.doctors.find(d => d.id === doctorId);
     if (!doctor) throw new Error('Doctor not found');
@@ -361,6 +374,16 @@ export function SocketProvider({ children }) {
     }
 
     const updatedTokens = serverState.tokens.map(t => {
+      // Mark previous patient as completed if doctor was currently seeing someone
+      if (doctor.currentToken && t.tokenId === doctor.currentToken && (t.queueStatus === 'CALLED' || t.queueStatus === 'IN_CONSULTATION')) {
+        return {
+          ...t,
+          queueStatus: 'COMPLETED',
+          completedAt: new Date().toISOString(),
+          journeyStep: 'CONSULTATION_COMPLETED',
+          version: (t.version || 1) + 1
+        };
+      }
       if (t.tokenId === nextToken.tokenId) {
         return {
           ...t,
@@ -392,7 +415,7 @@ export function SocketProvider({ children }) {
 
     applyStateUpdate(updatedState, true);
     if (connected && socket) {
-      socket.emit('CALL_NEXT_TOKEN', { doctorId, staffPin });
+      socket.emit('CALL_NEXT_TOKEN', { doctorId, staffPin: staffPin || '1234' });
     }
     playChime('call');
     return { success: true, token: nextToken, doctor };
@@ -400,7 +423,7 @@ export function SocketProvider({ children }) {
 
   // Queue Action 3: Mark No-Show
   const markNoShowPatient = async (tokenId, staffPin = '1234') => {
-    if (staffPin !== '1234') throw new Error('Invalid Staff PIN');
+    if (!isValidStaffAuth(staffPin)) throw new Error('Invalid Staff PIN');
 
     const updatedTokens = serverState.tokens.map(t => {
       if (t.tokenId === tokenId) {
@@ -418,13 +441,13 @@ export function SocketProvider({ children }) {
 
     const updatedState = { ...serverState, tokens: updatedTokens, doctors: updatedDoctors };
     applyStateUpdate(updatedState, true);
-    if (connected && socket) socket.emit('NO_SHOW', { tokenId, staffPin });
+    if (connected && socket) socket.emit('NO_SHOW', { tokenId, staffPin: staffPin || '1234' });
     return { success: true };
   };
 
   // Queue Action 4: Send to End of Queue
   const sendToEndOfQueuePatient = async (tokenId, staffPin = '1234') => {
-    if (staffPin !== '1234') throw new Error('Invalid Staff PIN');
+    if (!isValidStaffAuth(staffPin)) throw new Error('Invalid Staff PIN');
 
     const maxNum = Math.max(...serverState.tokens.map(t => t.tokenNumber || 0), 100);
     const updatedTokens = serverState.tokens.map(t => {
@@ -449,13 +472,13 @@ export function SocketProvider({ children }) {
 
     const updatedState = { ...serverState, tokens: updatedTokens, doctors: updatedDoctors };
     applyStateUpdate(updatedState, true);
-    if (connected && socket) socket.emit('SEND_TO_END', { tokenId, staffPin });
+    if (connected && socket) socket.emit('SEND_TO_END', { tokenId, staffPin: staffPin || '1234' });
     return { success: true };
   };
 
   // Queue Action 5: Move to Another Department
   const movePatientDepartment = async (tokenId, newDeptId, staffPin = '1234') => {
-    if (staffPin !== '1234') throw new Error('Invalid Staff PIN');
+    if (!isValidStaffAuth(staffPin)) throw new Error('Invalid Staff PIN');
 
     const targetDept = departments.find(d => d.id === newDeptId) || departments[0];
     const targetDoc = serverState.doctors.find(d => d.departmentId === targetDept.id) || serverState.doctors[0];
@@ -489,13 +512,13 @@ export function SocketProvider({ children }) {
 
     const updatedState = { ...serverState, tokens: updatedTokens };
     applyStateUpdate(updatedState, true);
-    if (connected && socket) socket.emit('MOVE_DEPARTMENT', { tokenId, newDeptId, staffPin });
+    if (connected && socket) socket.emit('MOVE_DEPARTMENT', { tokenId, newDeptId, staffPin: staffPin || '1234' });
     return { success: true };
   };
 
   // Queue Action 6: Set Doctor Status (Break or Delay)
   const setDoctorStatusAction = async (doctorId, status, breakUntil = null, delayMinutes = 0, staffPin = '1234') => {
-    if (staffPin !== '1234') throw new Error('Invalid Staff PIN');
+    if (!isValidStaffAuth(staffPin)) throw new Error('Invalid Staff PIN');
 
     const updatedDoctors = serverState.doctors.map(d => {
       if (d.id === doctorId) {
@@ -511,13 +534,13 @@ export function SocketProvider({ children }) {
 
     const updatedState = { ...serverState, doctors: updatedDoctors };
     applyStateUpdate(updatedState, true);
-    if (connected && socket) socket.emit('SET_DOCTOR_STATUS', { doctorId, status, breakUntil, delayMinutes, staffPin });
+    if (connected && socket) socket.emit('SET_DOCTOR_STATUS', { doctorId, status, breakUntil, delayMinutes, staffPin: staffPin || '1234' });
     return { success: true };
   };
 
   // Action 7: Reassign Consultation Room
   const reassignRoom = async (doctorId, newRoomId, newFloor, reason = 'Doctor relocated', staffPin = '1234') => {
-    if (staffPin !== '1234') throw new Error('Invalid Staff PIN');
+    if (!isValidStaffAuth(staffPin)) throw new Error('Invalid Staff PIN');
 
     const doctor = serverState.doctors.find(d => d.id === doctorId);
     const oldRoomId = doctor ? doctor.roomId : 'Previous';
@@ -552,13 +575,13 @@ export function SocketProvider({ children }) {
 
     const updatedState = { ...serverState, doctors: updatedDoctors, tokens: updatedTokens };
     applyStateUpdate(updatedState, true);
-    if (connected && socket) socket.emit('REASSIGN_ROOM', { doctorId, newRoomId, newFloor, reason, staffPin });
+    if (connected && socket) socket.emit('REASSIGN_ROOM', { doctorId, newRoomId, newFloor, reason, staffPin: staffPin || '1234' });
     return { success: true };
   };
 
   // Action 8: Toggle Lift Status
   const updateLift = async (liftKey, status, staffPin = '1234') => {
-    if (staffPin !== '1234') throw new Error('Invalid Staff PIN');
+    if (!isValidStaffAuth(staffPin)) throw new Error('Invalid Staff PIN');
 
     const updatedLifts = {
       ...serverState.lifts,
@@ -570,7 +593,7 @@ export function SocketProvider({ children }) {
 
     const updatedState = { ...serverState, lifts: updatedLifts };
     applyStateUpdate(updatedState, true);
-    if (connected && socket) socket.emit('UPDATE_LIFT_STATUS', { liftKey, status, staffPin });
+    if (connected && socket) socket.emit('UPDATE_LIFT_STATUS', { liftKey, status, staffPin: staffPin || '1234' });
     return { success: true, lifts: updatedLifts };
   };
 
@@ -598,7 +621,7 @@ export function SocketProvider({ children }) {
 
   // Action 10: Mark Emergency Alert Seen
   const markEmergencySeenAction = async (alertId, staffPin = '1234') => {
-    if (staffPin !== '1234') throw new Error('Invalid Staff PIN');
+    if (!isValidStaffAuth(staffPin)) throw new Error('Invalid Staff PIN');
 
     const updatedEmergencies = serverState.emergencies.map(a => {
       if (a.id === alertId) {
@@ -609,32 +632,58 @@ export function SocketProvider({ children }) {
 
     const updatedState = { ...serverState, emergencies: updatedEmergencies };
     applyStateUpdate(updatedState, true);
-    if (connected && socket) socket.emit('MARK_EMERGENCY_SEEN', { alertId, staffPin });
+    if (connected && socket) socket.emit('MARK_EMERGENCY_SEEN', { alertId, staffPin: staffPin || '1234' });
     return { success: true };
   };
 
   // Action 11: Demo Controls - Add 20 Sample Patients
-  const addSamplePatientsAction = async () => {
-    const existingIds = new Set(serverState.tokens.map(t => t.tokenId));
-    const newPatients = samplePatients.filter(p => !existingIds.has(p.tokenId)).map(p => ({
-      ...p,
-      issuedAt: new Date().toISOString(),
-      version: 1
-    }));
+  const addSamplePatientsAction = async (staffPin = '1234') => {
+    const existingMap = new Map(serverState.tokens.map(t => [t.tokenId, t]));
+    const preparedPatients = samplePatients.map(p => {
+      const existing = existingMap.get(p.tokenId);
+      if (existing) {
+        if (existing.queueStatus === 'IN_CONSULTATION') return existing;
+        return {
+          ...existing,
+          queueStatus: 'WAITING',
+          journeyStep: 'NAVIGATING_TO_WAITING',
+          calledAt: null,
+          completedAt: null,
+          version: (existing.version || 1) + 1
+        };
+      }
+      return {
+        ...p,
+        issuedAt: new Date().toISOString(),
+        version: 1
+      };
+    });
 
-    const updatedTokens = [...serverState.tokens, ...newPatients];
+    const nonSampleTokens = serverState.tokens.filter(t => !samplePatients.some(sp => sp.tokenId === t.tokenId));
+    const updatedTokens = [...nonSampleTokens, ...preparedPatients];
     const updatedState = { ...serverState, tokens: updatedTokens };
     applyStateUpdate(updatedState, true);
+
+    const jwtToken = sessionStorage.getItem('opd_saathi_jwt');
+    const authHeaders = {
+      'Content-Type': 'application/json',
+      'x-staff-pin': staffPin || '1234',
+      ...(jwtToken ? { 'Authorization': `Bearer ${jwtToken}` } : {})
+    };
+
     if (connected && socket) {
-      try {
-        await fetch(`${SOCKET_SERVER_URL}/api/add-sample-patients`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ patients: newPatients })
-        });
-      } catch {}
+      socket.emit('ADD_SAMPLE_PATIENTS', { patients: preparedPatients, staffPin: staffPin || '1234' });
     }
-    return { success: true, addedCount: newPatients.length };
+
+    try {
+      await fetch(getApiUrl('/api/add-sample-patients'), {
+        method: 'POST',
+        headers: authHeaders,
+        body: JSON.stringify({ patients: preparedPatients, staffPin: staffPin || '1234' })
+      });
+    } catch {}
+
+    return { success: true, addedCount: preparedPatients.length };
   };
 
   // Action 12: Demo Controls - Speed Time 10x
@@ -680,7 +729,7 @@ export function SocketProvider({ children }) {
     applyStateUpdate(cleanState, true);
     if (connected && socket) {
       try {
-        await fetch(`${SOCKET_SERVER_URL}/api/reset-demo`, { method: 'POST' });
+        await fetch(getApiUrl('/api/reset-demo'), { method: 'POST' });
       } catch {}
     }
     return cleanState;

@@ -2,13 +2,15 @@ import React, { useState } from 'react';
 import { useSocket } from '../../context/SocketContext';
 import { useJourney } from '../../context/JourneyContext';
 import { useAccessibility } from '../../context/AccessibilityContext';
+import { demographicPersonas } from '../../data/demographicPersonas';
 import { 
   UserPlus, 
   Sparkles, 
   ShieldCheck, 
   CheckSquare, 
   Square,
-  ArrowRight
+  ArrowRight,
+  Users
 } from 'lucide-react';
 
 export default function RegistrationForm() {
@@ -17,30 +19,30 @@ export default function RegistrationForm() {
   const { language, setLanguage, assistedMode, setAssistedMode, t } = useAccessibility();
 
   const [formData, setFormData] = useState({
-    patientName: 'Kamla',
-    age: 62,
+    patientName: '',
+    age: '',
     gender: 'Female',
     departmentId: 'Orthopedics',
     avoidStairs: true,
     assistedMode: true,
-    language: 'ta'
+    language: 'hi'
   });
 
   const [loading, setLoading] = useState(false);
 
-  // 1-Click Kamla Persona Quick-Fill
-  const handleQuickFillKamla = () => {
+  // 1-Click Pan-India Citizen Persona Selector
+  const handleSelectPersona = (p) => {
     setFormData({
-      patientName: 'Kamla',
-      age: 62,
-      gender: 'Female',
-      departmentId: 'Orthopedics',
-      avoidStairs: true,
-      assistedMode: true,
-      language: 'ta'
+      patientName: p.patientName,
+      age: p.age,
+      gender: p.gender,
+      departmentId: p.departmentName,
+      avoidStairs: p.avoidStairs,
+      assistedMode: p.assistedMode,
+      language: p.language
     });
-    setLanguage('ta');
-    setAssistedMode(true);
+    setLanguage(p.language);
+    setAssistedMode(p.assistedMode);
   };
 
   const handleSubmit = async (e) => {
@@ -71,15 +73,26 @@ export default function RegistrationForm() {
         </p>
       </div>
 
-      {/* Kamla Quick-Fill Preset Button */}
-      <button
-        type="button"
-        onClick={handleQuickFillKamla}
-        className="w-full tap-target-large p-3.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-950 font-black text-sm flex items-center justify-center gap-2 shadow-md transition-all active:scale-98"
-      >
-        <Sparkles size={18} className="text-slate-950" />
-        <span>{t('registration.kamlaQuickFill')}</span>
-      </button>
+      {/* Pan-India Citizen Presets */}
+      <div className="space-y-2">
+        <label className="block text-xs font-black uppercase text-slate-700 tracking-wider">
+          Demo Citizen Profiles (All Indian States)
+        </label>
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+          {demographicPersonas.map((p) => (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => handleSelectPersona(p)}
+              className="tap-target-large flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-900 font-bold text-xs whitespace-nowrap active:scale-95 transition-all shadow-2xs flex-shrink-0"
+            >
+              <span>{p.icon}</span>
+              <span className="font-extrabold">{p.patientName.split(' ')[0]}</span>
+              <span className="text-[10px] text-slate-500">({p.age}y • {p.stateCode})</span>
+            </button>
+          ))}
+        </div>
+      </div>
 
       {/* Registration Form */}
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -94,7 +107,7 @@ export default function RegistrationForm() {
             value={formData.patientName}
             onChange={(e) => setFormData({ ...formData, patientName: e.target.value })}
             className="w-full tap-target-large px-4 py-2.5 rounded-xl border-2 border-slate-300 focus:border-emerald-600 focus:outline-none font-bold text-slate-900"
-            placeholder="e.g. Kamla / Kamala"
+            placeholder="e.g. Ramesh Sharma, Kamla Devi, Priya, Mohammed Rafiq"
           />
         </div>
 

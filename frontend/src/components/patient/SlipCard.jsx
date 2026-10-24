@@ -114,10 +114,10 @@ export default function SlipCard({ onNavigate }) {
   };
 
   return (
-    <div ref={cardRef} className="bg-white rounded-3xl shadow-xl border-2 border-slate-200 overflow-hidden print:border-none print:shadow-none">
+    <div ref={cardRef} className="bg-qc-bg text-qc-text rounded-3xl shadow-xl border-2 border-qc-border overflow-hidden print:border-none print:shadow-none">
       {/* Hospital Seal Header */}
-      <div className="bg-emerald-800 text-white p-4 text-center border-b-2 border-emerald-950">
-        <p className="text-[11px] uppercase font-black tracking-widest text-emerald-200 m-0">
+      <div className="bg-qc-primary text-qc-bg p-4 text-center border-b-2 border-qc-text/20">
+        <p className="text-[11px] uppercase font-black tracking-widest text-qc-sage m-0">
           CITY DISTRICT HEADQUARTERS HOSPITAL
         </p>
         <h2 className="text-xl sm:text-2xl font-black m-0 mt-0.5 tracking-tight">
@@ -127,15 +127,15 @@ export default function SlipCard({ onNavigate }) {
 
       <div className="p-5 sm:p-6 space-y-4">
         {/* Token Number High-Impact Banner */}
-        <div className="bg-emerald-50 border-3 border-emerald-500 p-4 rounded-2xl text-center shadow-inner">
-          <p className="text-xs font-black uppercase text-emerald-800 tracking-wider m-0">
+        <div className="bg-qc-sage/40 border-2 border-qc-primary p-4 rounded-2xl text-center shadow-inner">
+          <p className="text-xs font-black uppercase text-qc-primary tracking-wider m-0">
             {t('slip.tokenLabel')}
           </p>
-          <div className="text-5xl sm:text-6xl font-black text-emerald-950 my-1 font-mono tracking-tight drop-shadow-sm">
+          <div className="text-5xl sm:text-6xl font-black text-qc-primary my-1 font-mono tracking-tight tabular-nums drop-shadow-sm">
             {activeSlip.tokenId}
           </div>
 
-          <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-emerald-200 text-emerald-950 font-black text-xs mt-1">
+          <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-qc-sage text-qc-primary font-black text-xs mt-1">
             <Clock size={15} />
             <span>
               {aheadCount === 0 
@@ -147,54 +147,54 @@ export default function SlipCard({ onNavigate }) {
 
         {/* Patient & Room Details Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-          <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
-            <div className="flex items-center gap-1.5 text-slate-500 font-bold text-xs uppercase mb-1">
+          <div className="bg-white p-3.5 rounded-2xl border border-qc-border">
+            <div className="flex items-center gap-1.5 text-qc-text/60 font-bold text-xs uppercase mb-1">
               <User size={15} />
               <span>{t('slip.patientDetails')}</span>
             </div>
-            <p className="font-extrabold text-slate-900 text-lg m-0">
+            <p className="font-extrabold text-qc-text text-lg m-0">
               {activeSlip.patientName}
             </p>
-            <p className="text-xs text-slate-600 m-0 mt-0.5">
+            <p className="text-xs text-qc-text/70 m-0 mt-0.5">
               {activeSlip.age} yrs • {activeSlip.gender}
             </p>
           </div>
 
-          <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
-            <div className="flex items-center gap-1.5 text-slate-500 font-bold text-xs uppercase mb-1">
+          <div className="bg-white p-3.5 rounded-2xl border border-qc-border">
+            <div className="flex items-center gap-1.5 text-qc-text/60 font-bold text-xs uppercase mb-1">
               <Stethoscope size={15} />
               <span>{t('slip.assignedDoctor')}</span>
             </div>
-            <p className="font-extrabold text-slate-900 text-base m-0">
+            <p className="font-extrabold text-qc-text text-base m-0">
               {activeSlip.assignedDoctorName}
             </p>
-            <p className="text-xs font-black text-emerald-700 m-0 mt-0.5">
+            <p className="text-xs font-black text-qc-primary m-0 mt-0.5">
               {activeSlip.departmentName}
             </p>
           </div>
         </div>
 
         {/* Room & Floor Banner */}
-        <div className="p-4 rounded-2xl bg-amber-50 border-2 border-amber-300 flex items-center justify-between gap-3">
+        <div className="p-4 rounded-2xl bg-qc-amber/25 border-2 border-qc-amber flex items-center justify-between gap-3">
           <div>
-            <p className="text-xs font-black uppercase text-amber-900 tracking-wider m-0">
+            <p className="text-xs font-black uppercase text-qc-text/80 tracking-wider m-0">
               {t('slip.destinationRoom')}
             </p>
-            <p className="text-2xl font-black text-slate-950 m-0">
+            <p className="text-2xl font-black text-qc-text m-0">
               {activeSlip.assignedRoomNumber ? `Room ${activeSlip.assignedRoomNumber}` : activeSlip.assignedRoomId}
             </p>
           </div>
           <div className="text-right">
-            <span className="text-xs font-bold text-amber-900 uppercase block">Floor</span>
-            <span className="text-2xl font-black text-amber-800">
+            <span className="text-xs font-bold text-qc-text/80 uppercase block">Floor</span>
+            <span className="text-2xl font-black text-qc-primary">
               Floor {activeSlip.assignedFloor}
             </span>
           </div>
         </div>
 
         {/* Mobility Safe Invariant Tag */}
-        <div className="flex items-center gap-2 bg-emerald-50 text-emerald-800 p-2.5 rounded-xl border border-emerald-200 text-xs font-bold">
-          <ShieldCheck size={18} className="text-emerald-600 flex-shrink-0" />
+        <div className="flex items-center gap-2 bg-qc-sage/50 text-qc-primary p-2.5 rounded-xl border border-qc-primary/30 text-xs font-bold">
+          <ShieldCheck size={18} className="text-qc-primary flex-shrink-0" />
           <span>{t('slip.cautionStairs')}</span>
         </div>
 

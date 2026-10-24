@@ -20,16 +20,23 @@ import {
 } from 'lucide-react';
 
 export default function FindPlaceView() {
-  const { language, avoidStairsDefault, t } = useAccessibility();
+  const { language, avoidStairsDefault, selectedEntranceGate, t } = useAccessibility();
   const { serverState } = useSocket();
   const { setHelpModalOpen } = useJourney();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFloorTab, setSelectedFloorTab] = useState(1);
-  const [startNodeId, setStartNodeId] = useState('ENTRANCE_G');
+  const [startNodeId, setStartNodeId] = useState(selectedEntranceGate || 'ENTRANCE_G');
   const [targetNodeId, setTargetNodeId] = useState('OPD_ROOM_5');
   const [avoidStairs, setAvoidStairs] = useState(avoidStairsDefault);
   const [routeResult, setRouteResult] = useState(null);
+
+  // Sync with selected entrance gate if changed from location bar
+  useEffect(() => {
+    if (selectedEntranceGate && ['ENTRANCE_G', 'CASUALTY', 'RAMP_1'].includes(selectedEntranceGate)) {
+      setStartNodeId(selectedEntranceGate);
+    }
+  }, [selectedEntranceGate]);
 
   // Recalculate route whenever start, target, avoidStairs, or lifts status change
   useEffect(() => {
@@ -72,16 +79,16 @@ export default function FindPlaceView() {
   });
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-6 space-y-6 animate-fade-in">
+    <div className="max-w-4xl mx-auto px-4 py-6 space-y-6 animate-fade-in text-qc-text">
       {/* Header */}
-      <div className="bg-white rounded-3xl p-6 shadow-md border-2 border-slate-200">
+      <div className="bg-qc-bg rounded-3xl p-6 shadow-md border-2 border-qc-border">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
           <div>
-            <h1 className="text-2xl font-black text-slate-900 m-0 flex items-center gap-2">
-              <Compass size={28} className="text-emerald-700" />
+            <h1 className="text-2xl font-black text-qc-text m-0 flex items-center gap-2">
+              <Compass size={28} className="text-qc-primary" />
               <span>{t('findPlace.title')}</span>
             </h1>
-            <p className="text-xs text-slate-500 font-semibold m-0 mt-1">
+            <p className="text-xs text-qc-text/70 font-semibold m-0 mt-1">
               Interactive 3-floor navigation with physical landmarks & step-free paths.
             </p>
           </div>
@@ -93,7 +100,7 @@ export default function FindPlaceView() {
               setTargetNodeId('HELP_DESK_G');
               setHelpModalOpen(true);
             }}
-            className="tap-target-large px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-500 text-slate-950 font-black text-xs flex items-center gap-1.5 shadow"
+            className="tap-target-large px-4 py-2.5 rounded-xl bg-qc-amber hover:bg-qc-amber/90 text-qc-text font-black text-xs flex items-center gap-1.5 shadow focus:ring-2 focus:ring-qc-primary"
           >
             <HelpCircle size={17} />
             <span>{t('findPlace.imLost')}</span>
@@ -102,27 +109,27 @@ export default function FindPlaceView() {
 
         {/* Search Input */}
         <div className="relative mb-4">
-          <Search size={22} className="absolute left-4 top-3.5 text-slate-400" />
+          <Search size={22} className="absolute left-4 top-3.5 text-qc-text/50" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={t('findPlace.searchPlaceholder')}
-            className="w-full tap-target-large pl-12 pr-4 py-3.5 rounded-2xl border-2 border-slate-300 focus:border-emerald-600 font-bold text-slate-900 outline-none text-base"
+            className="w-full tap-target-large pl-12 pr-4 py-3.5 rounded-2xl border-2 border-qc-border bg-white focus:border-qc-primary font-bold text-qc-text outline-none text-base focus:ring-2 focus:ring-qc-primary"
           />
         </div>
 
         {/* Avoid Stairs Switch & Controls */}
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-200">
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-qc-border">
           <label 
             onClick={() => setAvoidStairs(!avoidStairs)}
-            className="flex items-center gap-2.5 cursor-pointer select-none text-xs font-black text-slate-800"
+            className="flex items-center gap-2.5 cursor-pointer select-none text-xs font-black text-qc-text"
           >
             <input
               type="checkbox"
               checked={avoidStairs}
               onChange={() => {}}
-              className="w-5 h-5 text-emerald-600 rounded"
+              className="w-5 h-5 text-qc-primary accent-qc-primary rounded focus:ring-qc-primary"
             />
             <span>{t('findPlace.avoidStairs')}</span>
           </label>
@@ -131,7 +138,7 @@ export default function FindPlaceView() {
             <button
               type="button"
               onClick={handleListenDirections}
-              className="tap-target-large px-3.5 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs flex items-center gap-1.5 shadow"
+              className="tap-target-large px-4 py-2 rounded-xl bg-qc-primary hover:bg-qc-primary/90 text-qc-bg font-bold text-xs flex items-center gap-1.5 shadow focus:ring-2 focus:ring-qc-primary"
             >
               <Volume2 size={16} />
               <span>{t('findPlace.listenRoute')}</span>
