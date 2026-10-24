@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useJourney } from '../context/JourneyContext';
 import { useAccessibility } from '../context/AccessibilityContext';
 import { useSocket } from '../context/SocketContext';
@@ -23,7 +23,10 @@ import {
   ArrowRight,
   AlertTriangle,
   Map,
-  Heart
+  Heart,
+  Sparkles,
+  Ticket,
+  ChevronRight
 } from 'lucide-react';
 
 export default function PatientHome() {
@@ -41,6 +44,23 @@ export default function PatientHome() {
   const [activeTab, setActiveTab] = useState(() => (activeSlip ? 'my_turn' : 'home'));
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [mapOpen, setMapOpen] = useState(false);
+
+  // Listen to mobile bottom navigation events
+  useEffect(() => {
+    const handleMyTurn = () => {
+      setActiveTab(activeSlip ? 'my_turn' : 'have_slip');
+    };
+    const handleFindPlace = () => {
+      setActiveTab('find_place');
+    };
+    window.addEventListener('opd_nav_my_turn', handleMyTurn);
+    window.addEventListener('opd_nav_find_place', handleFindPlace);
+
+    return () => {
+      window.removeEventListener('opd_nav_my_turn', handleMyTurn);
+      window.removeEventListener('opd_nav_find_place', handleFindPlace);
+    };
+  }, [activeSlip]);
 
   // First-Visit Language Modal
   const [showLanguageModal, setShowLanguageModal] = useState(() => !hasChosenLanguage);
@@ -170,171 +190,204 @@ export default function PatientHome() {
       )}
 
       {/* ======================================================== */}
-      {/* 2. MAIN HOME SCREEN: THE 4 ESSENTIAL ACTIONS             */}
+      {/* 2. MAIN HOME SCREEN: CLEAN, MOBILE-FIRST LAYOUT          */}
       {/* ======================================================== */}
       {activeTab === 'home' && (
-        <div className="space-y-6 animate-fade-in">
-          {/* Active Journey Card shown directly on Home if patient has registered */}
-          {activeSlip && (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-black uppercase text-[#174E46] tracking-wider">
-                  Your Confirmed Visit Status
+        <div className="space-y-4 sm:space-y-6 animate-fade-in">
+          {/* Active Visit Spotlight (If token already issued) */}
+          {activeSlip ? (
+            <div className="bg-gradient-to-br from-[#174E46] to-[#0E352F] text-white p-5 sm:p-6 rounded-3xl shadow-lg border border-[#174E46] relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-10 -mt-10 pointer-events-none" />
+              
+              <div className="flex items-center justify-between gap-2 mb-3">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 text-[#D9E8DF] text-[11px] font-black uppercase tracking-wider backdrop-blur-xs">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <span>{language === 'ta' ? 'செயலில் உள்ள டோக்கன்' : 'Active Token Visit'}</span>
                 </span>
-                <button
-                  onClick={() => setActiveTab('my_turn')}
-                  className="text-xs font-bold text-[#174E46] hover:underline flex items-center gap-1"
-                >
-                  <span>Open Full Tracker</span>
-                  <ArrowRight size={14} />
-                </button>
+                <span className="font-mono text-xs text-[#D9E8DF] font-bold">
+                  {lastUpdatedText}
+                </span>
               </div>
-              <NextActionCard />
+
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-3xl sm:text-4xl font-black font-mono tracking-tight text-[#F2C66D]">
+                      {activeSlip.tokenId}
+                    </span>
+                    <span className="text-sm font-bold text-[#D9E8DF]">
+                      ({activeSlip.patientName})
+                    </span>
+                  </div>
+                  <p className="text-sm font-semibold text-white/90 m-0 mt-1">
+                    {activeSlip.departmentName} • Room {activeSlip.assignedRoomNumber || activeSlip.assignedRoomId} (Floor {activeSlip.assignedFloor})
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('my_turn')}
+                    className="tap-target-large flex-1 sm:flex-initial px-4 py-2.5 rounded-xl bg-[#F2C66D] hover:bg-amber-300 text-[#26352F] font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow transition-transform active:scale-95"
+                  >
+                    <span>{language === 'ta' ? 'நேரலை நிலவரம்' : 'View My Turn'}</span>
+                    <ArrowRight size={16} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (window.confirm('Clear current token and start a new registration?')) {
+                        setPatientSlip(null);
+                        localStorage.removeItem('opd_saathi_active_slip');
+                      }
+                    }}
+                    title="Clear Token"
+                    className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-[#D9E8DF] transition-colors"
+                  >
+                    <RefreshCw size={16} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            /* Featured Hero Card: Register for OPD */
+            <div className="bg-gradient-to-br from-[#174E46] via-[#1B584F] to-[#123C36] text-white p-5 sm:p-7 rounded-3xl shadow-lg border border-[#174E46] relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-full -mr-16 -mt-16 pointer-events-none" />
+              
+              <div className="relative z-10 max-w-xl">
+                <span className="inline-block px-3 py-1 rounded-full bg-white/15 text-[#D9E8DF] text-[11px] font-black uppercase tracking-wider mb-2.5">
+                  {currentHospital ? currentHospital.name : 'OPD Saathi'} • {t('app.title')}
+                </span>
+                <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white m-0">
+                  {t('home.welcome')}
+                </h2>
+                <p className="text-xs sm:text-sm text-[#D9E8DF] m-0 mt-2 font-medium leading-relaxed">
+                  {t('home.sub')}
+                </p>
+
+                {/* Primary Call to Action Button */}
+                <div className="pt-4 flex flex-wrap items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('register')}
+                    className="tap-target-large px-6 py-3.5 rounded-2xl bg-[#F2C66D] hover:bg-[#e4b85c] text-[#26352F] font-black text-sm sm:text-base flex items-center justify-center gap-2.5 shadow-md transition-transform active:scale-95 flex-1 sm:flex-initial"
+                  >
+                    <UserPlus size={20} className="text-[#174E46]" />
+                    <span>{t('home.registerBtn')}</span>
+                    <ArrowRight size={18} />
+                  </button>
+                </div>
+              </div>
             </div>
           )}
 
-          {/* Welcome Quiet Confidence Editorial Banner */}
-          <div className="bg-[#174E46] text-[#F7F5EF] p-6 sm:p-8 rounded-3xl shadow-sm space-y-2 border border-[#174E46]">
-            <div className="max-w-xl">
-              <span className="inline-block px-3 py-1 rounded-full bg-[#123C36] text-[#D9E8DF] text-xs font-bold uppercase tracking-wider mb-2">
-                City District Hospital • OPD Saathi
-              </span>
-              <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-[#F7F5EF] m-0">
-                {t('home.welcome')}
-              </h2>
-              <p className="text-sm font-medium text-[#D9E8DF] m-0 mt-2 leading-relaxed">
-                {t('home.sub')}
-              </p>
-            </div>
-            <div className="text-[11px] font-medium text-[#D9E8DF]/90 pt-3 flex items-center gap-2">
-              <Clock size={14} />
-              <span>{t('app.lastSynced')}: {lastUpdatedText}</span>
-            </div>
-          </div>
-
-          {/* THE 4 PRIMARY ACTIONS (WCAG 2.2 AA / AAA: >=56px tall, icon + word + subtitle) */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Action 1: Register for OPD */}
-            <button
-              type="button"
-              onClick={() => setActiveTab('register')}
-              className="tap-button-primary p-6 rounded-3xl bg-white hover:bg-[#FAF8F3] border-2 border-[#174E46] text-left shadow-sm transition-transform active:scale-98 flex items-start gap-4 group"
-            >
-              <div className="w-14 h-14 rounded-2xl bg-[#174E46] text-[#F7F5EF] flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform shadow-sm">
-                <UserPlus size={28} />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-xl font-black text-[#26352F] m-0 group-hover:text-[#174E46]">
-                  {t('home.registerBtn')}
-                </h3>
-                <p className="text-xs font-semibold text-[#52665C] m-0 mt-1.5 leading-snug">
-                  {t('home.registerDesc')}
-                </p>
-              </div>
-            </button>
-
-            {/* Action 2: I Have My Slip */}
-            <button
-              type="button"
-              onClick={() => setActiveTab('have_slip')}
-              className="tap-button-primary p-6 rounded-3xl bg-white hover:bg-[#FAF8F3] border-2 border-[#E3DED1] hover:border-[#174E46] text-left shadow-sm transition-transform active:scale-98 flex items-start gap-4 group"
-            >
-              <div className="w-14 h-14 rounded-2xl bg-[#FAF8F3] text-[#26352F] border border-[#E3DED1] flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform shadow-sm">
-                <FileText size={28} />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-xl font-black text-[#26352F] m-0 group-hover:text-[#174E46]">
-                  {t('home.haveSlipBtn')}
-                </h3>
-                <p className="text-xs font-semibold text-[#52665C] m-0 mt-1.5 leading-snug">
-                  {t('home.haveSlipDesc')}
-                </p>
-              </div>
-            </button>
-
-            {/* Action 3: Find a Place */}
-            <button
-              type="button"
-              onClick={() => setActiveTab('find_place')}
-              className="tap-button-primary p-6 rounded-3xl bg-white hover:bg-[#FAF8F3] border-2 border-[#E3DED1] hover:border-[#174E46] text-left shadow-sm transition-transform active:scale-98 flex items-start gap-4 group"
-            >
-              <div className="w-14 h-14 rounded-2xl bg-[#EEF4F0] text-[#174E46] flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform shadow-sm">
-                <Compass size={28} />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-xl font-black text-[#26352F] m-0 group-hover:text-[#174E46]">
-                  {t('home.findPlaceBtn')}
-                </h3>
-                <p className="text-xs font-semibold text-[#52665C] m-0 mt-1.5 leading-snug">
-                  {t('home.findPlaceDesc')}
-                </p>
-              </div>
-            </button>
-
-            {/* Action 4: Get Help & Emergency */}
-            <button
-              type="button"
-              onClick={() => setHelpModalOpen(true)}
-              className="tap-button-primary p-6 rounded-3xl bg-[#FAF8F3] hover:bg-[#FDF7EA] border-2 border-[#E3DED1] hover:border-[#F2C66D] text-left shadow-sm transition-transform active:scale-98 flex items-start gap-4 group"
-            >
-              <div className="w-14 h-14 rounded-2xl bg-[#F2C66D] text-[#26352F] flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform shadow-sm">
-                <LifeBuoy size={28} />
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <h3 className="text-xl font-black text-[#26352F] m-0">
-                    {language === 'ta' ? 'உதவி பெறுக' : language === 'hi' ? 'सहायता प्राप्त करें' : 'Get Help'}
-                  </h3>
-                  <a
-                    href="/emergency"
-                    onClick={(e) => e.stopPropagation()}
-                    className="px-2 py-0.5 rounded-full bg-[#C93B2B] text-white text-[10px] font-black uppercase tracking-wider no-underline"
-                  >
-                    Emergency
-                  </a>
+          {/* Quick Actions Grid: 2 columns on mobile, 4 on desktop */}
+          <div>
+            <h3 className="text-xs font-black uppercase tracking-wider text-[#52665C] mb-2 px-1">
+              {language === 'ta' ? 'விரைவு சேவைகள்' : language === 'hi' ? 'त्वरित सेवाएं' : 'Quick Actions'}
+            </h3>
+            
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4">
+              {/* Quick Action 1: Have Slip */}
+              <button
+                type="button"
+                onClick={() => setActiveTab('have_slip')}
+                className="tap-target-large p-4 rounded-2xl bg-white hover:bg-[#FAF8F3] border border-[#E3DED1] hover:border-[#174E46] text-left shadow-xs transition-all active:scale-95 flex flex-col justify-between group"
+              >
+                <div className="w-10 h-10 rounded-xl bg-[#FAF8F3] text-[#174E46] border border-[#E3DED1] flex items-center justify-center mb-3 group-hover:bg-[#EEF4F0] transition-colors">
+                  <FileText size={20} />
                 </div>
-                <p className="text-xs font-semibold text-[#52665C] m-0 mt-1.5 leading-snug">
-                  {language === 'ta' 
-                    ? 'பாதுகாவலர் உதவி அட்டை அல்லது அவசர சிகிச்சை (Casualty)' 
-                    : language === 'hi'
-                    ? 'सुरक्षा गार्ड सहायता कार्ड या आपातकालीन वार्ड'
-                    : 'Show guard help card, request attendant, or go to Emergency'}
-                </p>
-              </div>
-            </button>
-          </div>
+                <div>
+                  <h4 className="text-sm font-black text-[#26352F] m-0 group-hover:text-[#174E46] leading-tight">
+                    {t('home.haveSlipBtn')}
+                  </h4>
+                  <p className="text-[11px] text-[#52665C] font-semibold m-0 mt-1 line-clamp-1">
+                    Find by Phone / ID
+                  </p>
+                </div>
+              </button>
 
-          {/* Quick Settings, 3-Floor Map & Family Companion Row */}
-          <div className="flex flex-wrap items-center justify-between gap-3 p-4 bg-white rounded-2xl border border-[#E3DED1]">
-            <div className="flex flex-wrap items-center gap-2">
+              {/* Quick Action 2: Find Room / Dijkstra Route */}
+              <button
+                type="button"
+                onClick={() => setActiveTab('find_place')}
+                className="tap-target-large p-4 rounded-2xl bg-white hover:bg-[#FAF8F3] border border-[#E3DED1] hover:border-[#174E46] text-left shadow-xs transition-all active:scale-95 flex flex-col justify-between group"
+              >
+                <div className="w-10 h-10 rounded-xl bg-[#EEF4F0] text-[#174E46] flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+                  <Compass size={20} />
+                </div>
+                <div>
+                  <h4 className="text-sm font-black text-[#26352F] m-0 group-hover:text-[#174E46] leading-tight">
+                    {t('home.findPlaceBtn')}
+                  </h4>
+                  <p className="text-[11px] text-[#52665C] font-semibold m-0 mt-1 line-clamp-1">
+                    Step-Free Navigation
+                  </p>
+                </div>
+              </button>
+
+              {/* Quick Action 3: 3-Floor Hospital Map */}
               <button
                 type="button"
                 onClick={() => setMapOpen(true)}
-                className="tap-target-large flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-[#FAF8F3] text-[#174E46] border border-[#E3DED1] hover:bg-[#EEF4F0] transition-colors"
+                className="tap-target-large p-4 rounded-2xl bg-white hover:bg-[#FAF8F3] border border-[#E3DED1] hover:border-[#174E46] text-left shadow-xs transition-all active:scale-95 flex flex-col justify-between group"
               >
-                <Map size={16} />
-                <span>{language === 'ta' ? '3-தள வரைபடம்' : '3-Floor Hospital Map'}</span>
+                <div className="w-10 h-10 rounded-xl bg-[#F7F5EF] text-[#26352F] flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+                  <Map size={20} className="text-[#174E46]" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-black text-[#26352F] m-0 group-hover:text-[#174E46] leading-tight">
+                    {language === 'ta' ? '3-தள வரைபடம்' : 'Hospital Map'}
+                  </h4>
+                  <p className="text-[11px] text-[#52665C] font-semibold m-0 mt-1 line-clamp-1">
+                    Interactive Layout
+                  </p>
+                </div>
               </button>
 
+              {/* Quick Action 4: Guard Help Card */}
+              <button
+                type="button"
+                onClick={() => setHelpModalOpen(true)}
+                className="tap-target-large p-4 rounded-2xl bg-[#FAF8F3] hover:bg-[#FDF7EA] border border-[#E3DED1] hover:border-[#F2C66D] text-left shadow-xs transition-all active:scale-95 flex flex-col justify-between group"
+              >
+                <div className="w-10 h-10 rounded-xl bg-[#F2C66D] text-[#26352F] flex items-center justify-center mb-3 group-hover:scale-105 transition-transform shadow-xs">
+                  <LifeBuoy size={20} />
+                </div>
+                <div>
+                  <h4 className="text-sm font-black text-[#26352F] m-0 leading-tight">
+                    {language === 'ta' ? 'உதவி அட்டை' : language === 'hi' ? 'सहायता कार्ड' : 'Guard Help'}
+                  </h4>
+                  <p className="text-[11px] text-[#52665C] font-semibold m-0 mt-1 line-clamp-1">
+                    Show to Attendant
+                  </p>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          {/* Secondary Utilities & Caregiver Row */}
+          <div className="flex flex-wrap items-center justify-between gap-2.5 p-3.5 bg-white rounded-2xl border border-[#E3DED1] text-xs">
+            <div className="flex items-center gap-2">
               <a
                 href={activeSlip ? `/track?token=${activeSlip.tokenId}` : '/track?token=OPD-7429'}
-                className="tap-target-large flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-[#FAF8F3] text-[#26352F] border border-[#E3DED1] hover:bg-[#EEF4F0] no-underline transition-colors"
+                className="tap-target-large inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold bg-[#FAF8F3] text-[#26352F] border border-[#E3DED1] hover:bg-[#EEF4F0] no-underline transition-colors"
               >
-                <Heart size={16} className="text-[#C93B2B]" />
-                <span>{language === 'ta' ? 'குடும்ப நேரலை இணைப்பு' : 'Caregiver Live Tracker'}</span>
+                <Heart size={14} className="text-[#C93B2B]" />
+                <span>{language === 'ta' ? 'குடும்ப நேரலை இணைப்பு' : 'Caregiver Tracker'}</span>
               </a>
 
               <button
                 type="button"
                 onClick={() => setSettingsOpen(true)}
-                className="tap-target-large flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-[#52665C] hover:text-[#26352F] hover:bg-[#FAF8F3] transition-colors"
+                className="p-2 rounded-xl text-[#52665C] hover:text-[#26352F] hover:bg-[#FAF8F3] transition-colors"
+                title="Settings"
               >
-                <SettingsIcon size={16} className="text-[#52665C]" />
-                <span>{t('home.settingsBtn')}</span>
+                <SettingsIcon size={16} />
               </button>
             </div>
 
-            <span className="text-xs font-medium text-[#52665C]">
+            <span className="text-[11px] font-semibold text-[#52665C]">
               {t('home.tagline')}
             </span>
           </div>

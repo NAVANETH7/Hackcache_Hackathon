@@ -10,6 +10,7 @@ import WaitingRoomBoard from './views/WaitingRoomBoard';
 import EmergencyView from './views/EmergencyView';
 import DemoHarness from './views/DemoHarness';
 import CaregiverTrackView from './views/CaregiverTrackView';
+import BottomNav from './components/common/BottomNav';
 import { AlertCircle, RotateCcw } from 'lucide-react';
 
 // Error Boundary Component to guarantee no blank white screen crash
@@ -71,7 +72,7 @@ export default function App() {
             <BrowserRouter>
               <div className="min-h-screen bg-slate-50 flex flex-col font-sans selection:bg-emerald-200">
                 <Header />
-                <main className="flex-1">
+                <main className="flex-1 pb-20 md:pb-6">
                   <Routes>
                     <Route path="/" element={<PatientHome />} />
                     <Route path="/staff" element={<StaffDashboard />} />
@@ -83,7 +84,7 @@ export default function App() {
                     <Route path="*" element={<PatientHome />} />
                   </Routes>
                 </main>
-                <footer className="bg-white border-t border-slate-200 py-4 px-4 text-center text-xs text-slate-500 print:hidden">
+                <footer className="hidden md:block bg-white border-t border-slate-200 py-4 px-4 text-center text-xs text-slate-500 print:hidden">
                   <p className="m-0 font-medium">
                     OPD Saathi • City District Headquarters Hospital • Prototype for Hackathon Evaluation
                   </p>
@@ -91,6 +92,7 @@ export default function App() {
                     WCAG AAA • Tri-Lingual (English, தமிழ், हिंदी) • Zero-Stairs Dijkstra Routing
                   </p>
                 </footer>
+                <BottomNav />
               </div>
             </BrowserRouter>
           </JourneyProvider>

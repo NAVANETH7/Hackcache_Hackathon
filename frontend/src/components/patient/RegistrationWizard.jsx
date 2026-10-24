@@ -45,13 +45,12 @@ export default function RegistrationWizard({ onCancel, onFinish }) {
     t 
   } = useAccessibility();
 
-  // Step 0: Emergency triage screening
   // Step 1: Name
   // Step 2: Age
   // Step 3: Gender
   // Step 4: Mobile Number
   // Step 5: Which doctor do you need?
-  const [currentStep, setCurrentStep] = useState(0);
+  const [currentStep, setCurrentStep] = useState(1);
 
   const [formData, setFormData] = useState({
     patientName: '',
@@ -192,12 +191,28 @@ export default function RegistrationWizard({ onCancel, onFinish }) {
 
   return (
     <div className="max-w-xl mx-auto bg-qc-bg rounded-3xl shadow-xl border-2 border-qc-border overflow-hidden animate-fade-in text-qc-text">
+      {/* 24/7 Casualty Emergency Reassurance Banner */}
+      <div className="bg-red-600 text-white px-4 py-2.5 flex items-center justify-between gap-2 text-xs">
+        <div className="flex items-center gap-1.5 font-bold truncate">
+          <AlertTriangle size={15} className="text-amber-300 flex-shrink-0 animate-pulse" />
+          <span className="truncate">
+            {language === 'ta' ? 'அவசர நிலை அல்லது கடுமையான வலியா?' : language === 'hi' ? 'सीने में दर्द या आपातकालीन स्थिति?' : 'Chest pain or severe emergency?'}
+          </span>
+        </div>
+        <a
+          href="/emergency"
+          className="text-[11px] font-black bg-white text-red-700 px-3 py-1 rounded-lg no-underline whitespace-nowrap active:scale-95 transition-transform shadow-xs flex-shrink-0"
+        >
+          {language === 'ta' ? 'அவசர சிகிச்சை பிரிவு →' : 'Go to Casualty →'}
+        </a>
+      </div>
+
       {/* Universal Pan-India Citizen Quick Profiles & ABHA Scan */}
-      <div className="bg-qc-primary text-qc-bg p-4 space-y-3">
+      <div className="bg-qc-primary text-qc-bg p-3.5 sm:p-4 space-y-2.5">
         <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
           <div className="flex items-center gap-1.5 font-black uppercase tracking-wider text-qc-amber">
-            <Users size={16} />
-            <span>{language === 'ta' ? 'அனைத்து குடிமக்கள் முன்மாதிரிகள் (Demo)' : 'Pan-India Citizen Presets (Demo)'}</span>
+            <Users size={15} />
+            <span>{language === 'ta' ? 'முன்மாதிரிகள் (Demo)' : 'Quick Presets (Demo)'}</span>
           </div>
 
           {/* Someone is helping me toggle */}
@@ -547,7 +562,7 @@ export default function RegistrationWizard({ onCancel, onFinish }) {
             </div>
 
             {/* Department Picture Cards */}
-            <div className="grid grid-cols-1 gap-2.5 max-h-[380px] overflow-y-auto pr-1">
+            <div className="grid grid-cols-1 gap-2.5">
               {departments.map((dept) => {
                 const isSelected = formData.departmentId === dept.id;
                 const deptName = language === 'ta' ? dept.name_ta : language === 'hi' ? dept.name_hi : dept.name;
